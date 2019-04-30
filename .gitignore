@@ -1,0 +1,10 @@
+# Exclude References
+References
+# YouCompleteMe
+.ycm_extra_conf.py
+# Doxygen Documentation
+latex/
+html/
+# Outputs
+*.out
+out/
