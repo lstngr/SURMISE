@@ -24,6 +24,11 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
+.PHONY: tags
+tags:
+	$(RM) tags
+	ctags $(SOURCES) $(INCLUDES)
+
 .PHONY: clean
 clean:
 	$(RM) $(OBJECTS)
