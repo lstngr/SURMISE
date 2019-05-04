@@ -8,3 +8,6 @@ html/
 # Outputs
 *.out
 out/
+# Build and binaries
+build/
+bin/
