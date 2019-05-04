@@ -11,3 +11,5 @@ out/
 # Build and binaries
 build/
 bin/
+# tags
+tags

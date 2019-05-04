@@ -9,6 +9,7 @@ SRCDIR=src
 INCDIR=include
 OBJDIR=build
 BINDIR=bin
+CXXFLAGS+= -I./$(INCDIR)
 
 SOURCES  := $(wildcard $(SRCDIR)/*.cpp)
 INCLUDES := $(wildcard $(INCDIR)/*.hpp)
@@ -22,7 +23,6 @@ $(BINDIR)/$(TARGET): $(OBJECTS)
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-	@echo "Compiled "$<" successfully!"
 
 .PHONY: tags
 tags:
