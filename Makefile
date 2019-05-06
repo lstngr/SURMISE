@@ -1,7 +1,7 @@
 TARGET=surmise
 
 CXX=g++ -std=c++11
-CXXFLAGS=-g -Wall
+CXXFLAGS=-g -Wall -pedantic
 LDFLAGS=
 LDLIBS=
 

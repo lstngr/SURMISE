@@ -13,8 +13,6 @@
 #include <stdlib.h>
 #include <sstream>
 
-using namespace std;
-
 class ConfigFile{
   public:
       ConfigFile(const std::string& filename);

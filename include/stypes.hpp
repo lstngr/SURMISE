@@ -21,8 +21,37 @@ enum SDistributions {
  * before running the simulation.
  */
 struct SConfig {
-    double yo; //!< Amount of coolness of the simulation
-    std::string str; //!< Punchline of the simulator
+    double dsize;
+    unsigned int npart;
+    double dt;
+    double epsilon;
+    SDistributions distr_xlocs;
+    SDistributions distr_xvels;
+    SDistributions distr_ylocs;
+    SDistributions distr_yvels;
+    SDistributions distr_mass;
+    double unifo_xmin;
+    double unifo_xmax;
+    double unifo_ymin;
+    double unifo_ymax;
+    double gauss_xmean;
+    double gauss_xstdd;
+    double gauss_ymean;
+    double gauss_ystdd;
+    double unifo_vxmin;
+    double unifo_vxmax;
+    double unifo_vymin;
+    double unifo_vymax;
+    double gauss_vxmean;
+    double gauss_vxstdd;
+    double gauss_vymean;
+    double gauss_vystdd;
+    double unifo_mass_min;
+    double unifo_mass_max;
+    double poiss_mass_mean;
+    unsigned int max_iter;
+    double max_wtime;
+    double extra_time;
 };
 
 #endif // SURMISE_STYPES

@@ -21,7 +21,7 @@ SConfig ReadInputs( int argc, char** argv, int& error_code );
  * @param[in] filename Name of the file containing the input parameters.
  * @return Error code. Non-zero if the routine failed.
  */
-int ReadInputFile( SConfig& sim_conf, char* filename );
+int ReadInputFile( SConfig& sim_conf, const std::string& filename );
 
 #endif //SURMISE_SINPUT_HPP_
 
