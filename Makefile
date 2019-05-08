@@ -38,3 +38,7 @@ clean:
 cleanall: clean
 	$(RM) $(BINDIR)/$(TARGET)
 	@(echo "Cleaned up binaries.")
+
+.PHONY: docs
+docs:
+	doxygen doxydocs

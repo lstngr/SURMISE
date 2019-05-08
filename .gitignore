@@ -13,3 +13,5 @@ build/
 bin/
 # tags
 tags
+# Matlab shitty temps
+**/*.*~

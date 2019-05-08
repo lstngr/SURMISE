@@ -7,13 +7,14 @@
 
 #include <string>
 
-/** @brief Possible settings for distributions types (may apply to particles
- * locations, velocities or masses).
+/** Describes a particle in space. Contains relevant informations to
+ * itself (position, velocity, mass) as well as flags set by the domain classes.
  */
-enum SDistributions {
-    uniform,
-    gauss,
-    poisson
+struct Particle {
+    float pos[2]; //!< 2D Position of the particle
+    float vel[2]; //!< 2D Velocity of the particle
+    float mass; //!< Mass of the particle
+    int id; //!< Mass identifier (so we do not mix them during time-evolution).
 };
 
 /** @brief Structure containing the simulation parameters.
@@ -25,33 +26,10 @@ struct SConfig {
     unsigned int npart;
     double dt;
     double epsilon;
-    SDistributions distr_xlocs;
-    SDistributions distr_xvels;
-    SDistributions distr_ylocs;
-    SDistributions distr_yvels;
-    SDistributions distr_mass;
-    double unifo_xmin;
-    double unifo_xmax;
-    double unifo_ymin;
-    double unifo_ymax;
-    double gauss_xmean;
-    double gauss_xstdd;
-    double gauss_ymean;
-    double gauss_ystdd;
-    double unifo_vxmin;
-    double unifo_vxmax;
-    double unifo_vymin;
-    double unifo_vymax;
-    double gauss_vxmean;
-    double gauss_vxstdd;
-    double gauss_vymean;
-    double gauss_vystdd;
-    double unifo_mass_min;
-    double unifo_mass_max;
-    double poiss_mass_mean;
     unsigned int max_iter;
     double max_wtime;
     double extra_time;
+    Particle *parts;
 };
 
 #endif // SURMISE_STYPES

@@ -19,9 +19,11 @@ SConfig ReadInputs( int argc, char** argv, int& error_code );
  * @param[in,out] sim_conf Simulation configuration that will be overwritten with
  * the values read from filename.
  * @param[in] filename Name of the file containing the input parameters.
+ * @param[in] filename_init Name of the file containing the initial particle
+ * distributions
  * @return Error code. Non-zero if the routine failed.
  */
-int ReadInputFile( SConfig& sim_conf, const std::string& filename );
+int ReadInputFile( SConfig& sim_conf, const std::string& filename, const std::string& filename_init );
 
 #endif //SURMISE_SINPUT_HPP_
 
