@@ -22,6 +22,7 @@ struct Particle {
  * before running the simulation.
  */
 struct SConfig {
+    ~SConfig(){ delete[] parts; }
     double dsize;
     unsigned int npart;
     double dt;

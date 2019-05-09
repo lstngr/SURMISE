@@ -5,6 +5,8 @@ References
 # Doxygen Documentation
 latex/
 html/
+# inputs
+input/
 # Outputs
 *.out
 out/
