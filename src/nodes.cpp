@@ -29,8 +29,15 @@ Node* Node::GetChild( short int child_idx ) const {
 }
 
 //////////////////// ROOTNODE ///////////////////////
+/** @brief Creates the simulation's root node
+ * @details This call create the first node of the simulation, that is,
+ * instantiates the whole smiulation domain/box. The Particle(s) are stored in
+ * the configuration parameter.
+ * @param[in] cf Input configuration for the simulation. Most parameters it
+ * contains will be "unpacked" in the class' members.
+ */
 RootNode::RootNode( SConfig& cf )
-    :conf_(cf)
+    :Node(NULL), conf_(cf)
 {}
 
 //////////////////// LEAFNODE ///////////////////////
