@@ -1,4 +1,5 @@
 TARGET=surmise
+export DOXY_VERSION=$(shell git describe --abbrev=8 --dirty --always)
 
 CXX=g++ -std=c++11
 CXXFLAGS=-g -Wall -pedantic
@@ -41,4 +42,4 @@ cleanall: clean
 
 .PHONY: docs
 docs:
-	doxygen doxydocs
+	doxygen

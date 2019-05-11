@@ -32,8 +32,7 @@ class Node {
         /** Level of the Node. The RootNode has level 0.*/
         unsigned int level_;
         ///@{
-        /** Geometrical limits of the node's coverage (of physical space)
-         */
+        /// Geometrical limits of the node's coverage (of physical space)
         float xstart_, xend_, ystart_, yend_;
         ///@}
 };
@@ -46,13 +45,13 @@ class Node {
 class RootNode : public Node {
     public:
         RootNode(SConfig& conf);
-        int Decompose( Particle* parts ) override;
         int Run();
+        int Decompose( Particle* parts ) override;
         int TimeEvolution( double dt ) override;
     protected:
     private:
         /** Configuration of the simulation. We note it contains the relevant
-         * aalgorithmic parameters, but also the Particle's to be simulated.*/
+         * algorithmic parameters, but also the Particle's to be simulated.*/
         SConfig conf_;
 };
 
