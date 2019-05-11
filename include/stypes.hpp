@@ -3,7 +3,7 @@
  * routine.
  */
 #ifndef SURMISE_STYPES_
-#define SURMISE_STPYES_
+#define SURMISE_STYPES_
 
 #include <string>
 

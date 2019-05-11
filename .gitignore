@@ -1,13 +1,12 @@
 # Exclude References
-References
+/References
 # YouCompleteMe
 .ycm_extra_conf.py
 .color_coded
 # Doxygen Documentation
-latex/
-html/
+/doxygen
 # inputs
-input/
+/input
 # Outputs
 *.out
 out/
