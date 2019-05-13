@@ -153,7 +153,7 @@ SError Node::Decompose( std::vector<Particle*> &parts ) {
                 subparts.push_back(parts[ip]);
             }
         }
-        this->GetChild(ic)->Decompose(parts);
+        this->GetChild(ic)->Decompose(subparts);
     }
     return E_SUCCESS;
 }
@@ -266,7 +266,7 @@ SError RootNode::Decompose( std::vector<Particle*> &parts ) {
                 subparts.push_back(this->conf_.parts[ip]);
             }
         }
-        this->GetChild(ic)->Decompose(parts);
+        this->GetChild(ic)->Decompose(subparts);
     }
     return E_SUCCESS;
 }
