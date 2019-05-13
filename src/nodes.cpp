@@ -2,7 +2,7 @@
 #include "nodes.hpp"
 
 // Declare the static member here (not in the header!)
-int Node::maximum_level = 2;
+unsigned int Node::maximum_level = 2;
 
 //////////////////// NODE ///////////////////////
 
@@ -48,18 +48,18 @@ Node* Node::GetChild( short int child_idx ) const {
  * in the Node's children_ array.
  * @warning This method is not memory safe. Any already allocated child node is
  * not freed.
- * @todo Obviously check memory if performance not a stake.
+ * @todo Obviously check memory if performance not at stake.
  * @param[in] child Index of the child Node to instanciate (0-3).
  * @returns An error code.
  */
-SError Node::InitChild( int child) {
+SError Node::InitChild( int child ) {
     this->children_[child] = new Node(this);
-    ///@todo Implement correct bounds
+    bool low_quad(child==0 or child==2), left_quad(child==0 or child==1);
     this->children_[child]->SetBounds(
-            this->xybnds[0] + 0.5 * (child==0 or child==2) * ( this->xybnds[1] - this->xybnds[0] ),
-            this->xybnds[1] - 0.5 * (child==1 or child==3) * ( this->xybnds[1] - this->xybnds[0] ),
-            this->xybnds[2] + 0.5 * (child==0 or child==1) * ( this->xybnds[1] - this->xybnds[0] ),
-            this->xybnds[3] - 0.5 * (child==2 or child==3) * ( this->xybnds[1] - this->xybnds[0] )
+            this->xybnds[0] + 0.5 * (float)(not left_quad) * ( this->xybnds[1] - this->xybnds[0] ),
+            this->xybnds[1] - 0.5 * (float)left_quad * ( this->xybnds[1] - this->xybnds[0] ),
+            this->xybnds[2] + 0.5 * (float)(not low_quad) * ( this->xybnds[3] - this->xybnds[2] ),
+            this->xybnds[3] - 0.5 * (float)low_quad * ( this->xybnds[3] - this->xybnds[2] )
             );
     return E_SUCCESS;
 }
@@ -75,6 +75,42 @@ SError Node::InitChild( int child) {
 SError Node::InitAllChildren() {
     for( int ic(0); ic<4; ic++ ) {
         this->InitChild( ic );
+    }
+    return E_SUCCESS;
+}
+
+/** @brief Instanciates a child to the current Node.
+ * @details This methods dynamically allocates a new node at position `child`
+ * in the Node's children_ array.
+ * @warning This method is not memory safe. Any already allocated child node is
+ * not freed.
+ * @todo Obviously check memory if performance not at stake.
+ * @param[in] child Index of the child Node to instanciate (0-3).
+ * @returns An error code.
+ */
+SError Node::InitLeaf( int child ) {
+    this->children_[child] = new LeafNode(this);
+    bool low_quad(child==0 or child==2), left_quad(child==0 or child==1);
+    this->children_[child]->SetBounds(
+            this->xybnds[0] + 0.5 * (float)(not left_quad) * ( this->xybnds[1] - this->xybnds[0] ),
+            this->xybnds[1] - 0.5 * (float)left_quad * ( this->xybnds[1] - this->xybnds[0] ),
+            this->xybnds[2] + 0.5 * (float)(not low_quad) * ( this->xybnds[3] - this->xybnds[2] ),
+            this->xybnds[3] - 0.5 * (float)low_quad * ( this->xybnds[3] - this->xybnds[2] )
+            );
+    return E_SUCCESS;
+}
+
+/** @brief Instanciates all children to the current Node.
+ * @details This methods dynamically allocates four new nodes in the Node's
+ * children_ array.
+ * @warning This method is not memory safe. Any already allocated child node is
+ * not freed.
+ * @todo Obviously check memory if performance not a stake.
+ * @returns An error code.
+ */
+SError Node::InitAllLeafs() {
+    for( int ic(0); ic<4; ic++ ) {
+        this->InitLeaf( ic );
     }
     return E_SUCCESS;
 }
@@ -103,7 +139,22 @@ SError Node::SetBounds( float x1, float x2, float y1, float y2 ) {
  * zero is returned.
  */
 SError Node::Decompose( std::vector<Particle*> &parts ) {
-    ///@todo Implement tree decomposition.
+    // Create children and further decompose
+    // If required accuracy is obtained, create LeafNode children
+    if(this->level_ < this->maximum_level) {
+        this->InitAllChildren();
+    } else {
+        this->InitAllLeafs();
+    }
+    for( int ic(0); ic<4; ic++ ) {
+        std::vector<Particle*> subparts;
+        for( unsigned int ip(0); ip<parts.size(); ip++ ){
+            if( this->GetChild(ic)->BelongsTo(parts[ip]) ) {
+                subparts.push_back(parts[ip]);
+            }
+        }
+        this->GetChild(ic)->Decompose(parts);
+    }
     return E_SUCCESS;
 }
 
@@ -203,7 +254,8 @@ SError RootNode::Decompose( std::vector<Particle*> &parts ) {
     // Compute the desired amount of refinement
     Node::maximum_level = (int) std::max(
             2.,
-            std::ceil(std::log( this->conf_.npart ))
+            ///@todo Check whether -1 needed here
+            std::ceil(std::log( this->conf_.npart )) - 1
             );
     // Create children and further decompose
     this->InitAllChildren();
@@ -240,10 +292,23 @@ SError RootNode::TimeEvolution( double dt ) {
  * array to be passed. It is not possible to modify the LeafNode::children_
  * member, that will be left empty.
  * @param[in] parent Pointer to a parent node.
+ */
+LeafNode::LeafNode( Node *parent )
+    :Node(parent)
+{
+    // Make sure the storage is not initialized.
+    this->subparts_.empty();
+}
+
+/** @brief Builds a node loacted at the bottom of the tree, i.e. a leaf.
+ * @details The node is build in the usual way, except we require a Particle
+ * array to be passed. It is not possible to modify the LeafNode::children_
+ * member, that will be left empty.
+ * @param[in] parent Pointer to a parent node.
  * @param[in] parts Array of Particle objects that are located within the node's
  * boundaries.
  */
-LeafNode::LeafNode( Node *parent, std::vector<Particle*> parts )
+LeafNode::LeafNode( Node *parent, std::vector<Particle*> &parts )
     :Node(parent), subparts_(parts)
 {}
 
@@ -259,6 +324,7 @@ LeafNode::LeafNode( Node *parent, std::vector<Particle*> parts )
  * zero is returned.
  */
 SError LeafNode::Decompose( std::vector<Particle*> &parts ) {
+    this->subparts_ = parts;
     return E_SUCCESS;
 }
 

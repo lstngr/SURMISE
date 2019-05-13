@@ -22,13 +22,15 @@ class Node {
         Node* GetParent() const;
         Node* GetChild(short int child_idx) const;
         SError InitChild( int child );
+        SError InitLeaf( int leaf );
         SError InitAllChildren();
+        SError InitAllLeafs();
         SError SetBounds(float x1, float x2, float y1, float y2);
         virtual SError Decompose( std::vector<Particle*>& parts );
         virtual SError TimeEvolution( double dt );
         unsigned int GetLevel() const;
         bool BelongsTo( Particle *p ) const;
-        static int maximum_level; /** Maximum level of the tree
+        static unsigned int maximum_level; /** Maximum level of the tree
                                     @todo Protect scope, check MPI feasability.
                                     */
     protected:
@@ -72,7 +74,8 @@ class RootNode : public Node {
  */
 class LeafNode : public Node {
     public:
-        LeafNode( Node *parent, std::vector<Particle*> parts );
+        LeafNode( Node *parent );
+        LeafNode( Node *parent, std::vector<Particle*> &parts );
         SError Decompose( std::vector<Particle*>& parts ) override;
         SError TimeEvolution( double dt ) override;
     protected:
