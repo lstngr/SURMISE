@@ -11,5 +11,6 @@ int main( int argc, char** argv ){
     int errc(0);
     SConfig sim_conf(ReadInputs(argc,argv,errc));
     RootNode root(sim_conf);
+    root.Run();
     return 0;
 }

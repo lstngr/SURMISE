@@ -1,4 +1,8 @@
+#include <cmath>
 #include "nodes.hpp"
+
+// Declare the static member here (not in the header!)
+int Node::maximum_level = 2;
 
 //////////////////// NODE ///////////////////////
 
@@ -7,12 +11,23 @@
  * is left null and the node is interpreted to be at the root.
  */
 Node::Node( Node *parent )
-    :parent_(parent)
+    :parent_(parent), children_{NULL,NULL,NULL,NULL}
 {
     if( parent_ != NULL )
         this->level_ = parent_->GetLevel() + 1;
     else
         this->level_ = 0;
+}
+
+/** @brief Manages the destruction of Node objects and memory management.
+ * @details Moooar
+ */
+Node::~Node() {
+    for( size_t ic(0); ic<4; ic++) {
+        if( this->children_[ic] != NULL ) {
+            delete this->children_[ic];
+        }
+    }
 }
 
 /** @brief Returns the parent node of the current object.
@@ -28,6 +43,54 @@ Node* Node::GetChild( short int child_idx ) const {
     return children_[child_idx];
 }
 
+/** @brief Instanciates a child to the current Node.
+ * @details This methods dynamically allocates a new node at position `child`
+ * in the Node's children_ array.
+ * @warning This method is not memory safe. Any already allocated child node is
+ * not freed.
+ * @todo Obviously check memory if performance not a stake.
+ * @param[in] child Index of the child Node to instanciate (0-3).
+ * @returns An error code.
+ */
+SError Node::InitChild( int child) {
+    this->children_[child] = new Node(this);
+    ///@todo Implement correct bounds
+    this->children_[child]->SetBounds(
+            this->xybnds[0] + 0.5 * (child==0 or child==2) * ( this->xybnds[1] - this->xybnds[0] ),
+            this->xybnds[1] - 0.5 * (child==1 or child==3) * ( this->xybnds[1] - this->xybnds[0] ),
+            this->xybnds[2] + 0.5 * (child==0 or child==1) * ( this->xybnds[1] - this->xybnds[0] ),
+            this->xybnds[3] - 0.5 * (child==2 or child==3) * ( this->xybnds[1] - this->xybnds[0] )
+            );
+    return E_SUCCESS;
+}
+
+/** @brief Instanciates all children to the current Node.
+ * @details This methods dynamically allocates four new nodes in the Node's
+ * children_ array.
+ * @warning This method is not memory safe. Any already allocated child node is
+ * not freed.
+ * @todo Obviously check memory if performance not a stake.
+ * @returns An error code.
+ */
+SError Node::InitAllChildren() {
+    for( int ic(0); ic<4; ic++ ) {
+        this->InitChild( ic );
+    }
+    return E_SUCCESS;
+}
+
+/** @brief Sets the (physical) boundaries of the domain
+ * @param[in] x1,x2,y1,y2 Boundaries of the domain
+ * @returns An error code
+ */
+SError Node::SetBounds( float x1, float x2, float y1, float y2 ) {
+    this->xybnds[0] = x1;
+    this->xybnds[1] = x2;
+    this->xybnds[2] = y1;
+    this->xybnds[3] = y2;
+    return E_SUCCESS;
+}
+
 /** @brief Splits the current domain into four parts.
  * @details The splitting is performed recursively until enough levels have been
  * created. Pointers to Particle objects are passed from the RootNode
@@ -39,9 +102,9 @@ Node* Node::GetChild( short int child_idx ) const {
  * @returns Integer containing an error code. If the method exits cleanfully,
  * zero is returned.
  */
-int Node::Decompose( Particle *parts ) {
+SError Node::Decompose( std::vector<Particle*> &parts ) {
     ///@todo Implement tree decomposition.
-    return 0;
+    return E_SUCCESS;
 }
 
 /** @brief Performs a time step for the temporal evolution.
@@ -56,15 +119,28 @@ int Node::Decompose( Particle *parts ) {
  * @returns Integer containing an error code. If the method exits cleanfully,
  * zero is returned.
  */
-int Node::TimeEvolution( double dt ) {
+SError Node::TimeEvolution( double dt ) {
     ///@todo Implement time evolution algorithm.
-    return 0;
+    return E_SUCCESS;
 }
 
 /** Returns the level of the current Node. The RootNode (likely a parent of the
  * current one) has level zero.
  */
 unsigned int Node::GetLevel() const { return level_; }
+
+/** @brief Returns true if the argmuent Particle is in the domain
+ * @details Many more things
+ * @param[in] p Pointer to a Particle object.
+ * @returns Boolean indicating the Particle's belonging to the domain.
+ */
+bool Node::BelongsTo( Particle *p ) const {
+    float xp(p->pos[0]); float yp(p->pos[1]);
+    if( xp > this->xybnds[0] && xp < this->xybnds[1] &&
+            yp > this->xybnds[2] && yp < this->xybnds[3] )
+        return true;
+    return false;
+}
 
 //////////////////// ROOTNODE ///////////////////////
 /** @brief Creates the simulation's root node
@@ -76,7 +152,9 @@ unsigned int Node::GetLevel() const { return level_; }
  */
 RootNode::RootNode( SConfig& cf )
     :Node(NULL), conf_(cf)
-{}
+{
+    this->SetBounds(0.,this->conf_.dsize,0.,this->conf_.dsize);
+}
 
 /** @brief Launches the requested simulation.
  * @details After the initialization of the RootNode class, a call to this
@@ -99,22 +177,46 @@ RootNode::RootNode( SConfig& cf )
  * zero is returned.
  * @todo Verify if step 4 in the step description is needed.
  */
-int RootNode::Run() {
-    ///@todo Implement run structure
-    return 0;
+SError RootNode::Run() {
+    SError run_err(E_SUCCESS);
+    this->Decompose( this->conf_.parts );
+    int max_it = this->conf_.max_iter;
+    for( int it(0); it<max_it; it++ ) {
+        // Particles are distributed, perform FMM
+        run_err = this->TimeEvolution( this->conf_.dt );
+        /// @todo Error management, check computational cost.
+    }
+    return run_err;
 }
 
 /** @brief Initiates the simulation's domain tree decomposition.
  * @details Computes the required levels of the tree based on the number of
  * particles, and recursively distributes Particle objects to the child nodes.
  * @todo Update mechanism to handle adaptative structure
- * @param[in] Particle(s) that  are to be distributed in the tree, most likely
+ * @param[in] parts Particle(s) that  are to be distributed in the tree, most
+ * likely
  * those contained in the simulation configuration, RootNode::conf_.
  * @returns Integer containing an error code. If the method exits cleanfully,
  * zero is returned.
  */
-int RootNode::Decompose( Particle *parts ) {
-    return 0;
+SError RootNode::Decompose( std::vector<Particle*> &parts ) {
+    // Compute the desired amount of refinement
+    Node::maximum_level = (int) std::max(
+            2.,
+            std::ceil(std::log( this->conf_.npart ))
+            );
+    // Create children and further decompose
+    this->InitAllChildren();
+    for( int ic(0); ic<4; ic++ ) {
+        std::vector<Particle*> subparts;
+        for( unsigned int ip(0); ip<this->conf_.npart; ip++ ){
+            if( this->GetChild(ic)->BelongsTo(this->conf_.parts[ip]) ) {
+                subparts.push_back(this->conf_.parts[ip]);
+            }
+        }
+        this->GetChild(ic)->Decompose(parts);
+    }
+    return E_SUCCESS;
 }
 
 /** @brief Initiates a temporal evolution of a given time step.
@@ -128,8 +230,8 @@ int RootNode::Decompose( Particle *parts ) {
  * @returns Integer containing an error code. If the method exits cleanfully,
  * zero is returned.
  */
-int RootNode::TimeEvolution( double dt ) {
-    return 0;
+SError RootNode::TimeEvolution( double dt ) {
+    return E_SUCCESS;
 }
 
 //////////////////// LEAFNODE ///////////////////////
@@ -141,7 +243,7 @@ int RootNode::TimeEvolution( double dt ) {
  * @param[in] parts Array of Particle objects that are located within the node's
  * boundaries.
  */
-LeafNode::LeafNode( Node *parent, Particle* parts )
+LeafNode::LeafNode( Node *parent, std::vector<Particle*> parts )
     :Node(parent), subparts_(parts)
 {}
 
@@ -156,8 +258,8 @@ LeafNode::LeafNode( Node *parent, Particle* parts )
  * @returns Integer containing an error code. If the method exits cleanfully,
  * zero is returned.
  */
-int LeafNode::Decompose( Particle* parts ) {
-    return 0;
+SError LeafNode::Decompose( std::vector<Particle*> &parts ) {
+    return E_SUCCESS;
 }
 
 /** @brief Handles the system's time evolution.
@@ -175,6 +277,6 @@ int LeafNode::Decompose( Particle* parts ) {
  * @returns Integer containing an error code. If the method exits cleanfully,
  * zero is returned.
  */
-int LeafNode::TimeEvolution( double dt ) {
-    return 0;
+SError LeafNode::TimeEvolution( double dt ) {
+    return E_SUCCESS;
 }

@@ -5,7 +5,9 @@
 #ifndef SURMISE_NODES_HPP_
 #define SURMISE_NODES_HPP_
 
+#include <vector>
 #include "stypes.hpp"
+#include "serrors.hpp"
 
 /** @class Node
  * @brief Generic Node in the decomposition tree.
@@ -16,12 +18,19 @@
 class Node {
     public:
         Node(Node *parent = NULL );
-        virtual ~Node(){};
+        virtual ~Node();
         Node* GetParent() const;
         Node* GetChild(short int child_idx) const;
-        virtual int Decompose( Particle* parts );
-        virtual int TimeEvolution( double dt );
+        SError InitChild( int child );
+        SError InitAllChildren();
+        SError SetBounds(float x1, float x2, float y1, float y2);
+        virtual SError Decompose( std::vector<Particle*>& parts );
+        virtual SError TimeEvolution( double dt );
         unsigned int GetLevel() const;
+        bool BelongsTo( Particle *p ) const;
+        static int maximum_level; /** Maximum level of the tree
+                                    @todo Protect scope, check MPI feasability.
+                                    */
     protected:
     private:
         /** Pointer to parent Node*/
@@ -33,7 +42,7 @@ class Node {
         unsigned int level_;
         ///@{
         /// Geometrical limits of the node's coverage (of physical space)
-        float xstart_, xend_, ystart_, yend_;
+        float xybnds[4];
         ///@}
 };
 
@@ -45,14 +54,14 @@ class Node {
 class RootNode : public Node {
     public:
         RootNode(SConfig& conf);
-        int Run();
-        int Decompose( Particle* parts ) override;
-        int TimeEvolution( double dt ) override;
+        SError Run();
+        SError Decompose( std::vector<Particle*>& parts ) override;
+        SError TimeEvolution( double dt ) override;
     protected:
     private:
         /** Configuration of the simulation. We note it contains the relevant
          * algorithmic parameters, but also the Particle's to be simulated.*/
-        SConfig conf_;
+        SConfig &conf_;
 };
 
 /** @class LeafNode
@@ -63,14 +72,14 @@ class RootNode : public Node {
  */
 class LeafNode : public Node {
     public:
-        LeafNode( Node *parent, Particle* parts );
-        int Decompose( Particle* parts ) override;
-        int TimeEvolution( double dt ) override;
+        LeafNode( Node *parent, std::vector<Particle*> parts );
+        SError Decompose( std::vector<Particle*>& parts ) override;
+        SError TimeEvolution( double dt ) override;
     protected:
     private:
         /** Stores the Particle located in the node. They can be used for direct
          * or nearest-neighbours computation.*/
-        Particle *subparts_;
+        std::vector<Particle*> subparts_;
 };
 
 #endif //SURMISE_NODES_HPP_
