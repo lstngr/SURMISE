@@ -45,6 +45,7 @@ class Node {
         Node *children_[4];
         /** Level of the Node. The RootNode has level 0.*/
         unsigned int level_;
+        /** Index of the Node within its parent's children subtree. */
         unsigned int idx_;
         /// Geometrical limits of the node's coverage (of physical space)
         float xybnds[4];

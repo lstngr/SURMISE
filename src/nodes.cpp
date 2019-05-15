@@ -10,6 +10,7 @@ unsigned int Node::maximum_level = 2;
 /** @brief Creates a generic node.
  * @param[in] parent Pointer to a parent node. If none is provided, the pointer
  * is left null and the node is interpreted to be at the root.
+ * @param[in] idx Index of the child within its parent's children subtree.
  */
 Node::Node( Node *parent, unsigned int idx )
     :parent_(parent), children_{NULL,NULL,NULL,NULL}, idx_(idx)
@@ -44,6 +45,26 @@ Node* Node::GetChild( short int child_idx ) const {
     return children_[child_idx];
 }
 
+/** @brief Finds the non-empty Node on the same level.
+ * @details During the domain decomposition, initiated by the
+ * RootNode::Decomposition method, we recursively generated quad-tree decomposed
+ * subdomains, each associated with a Node located at a lower level of
+ * refinement. @n
+ * Some procedures within the SURMISE code require browsing all the Node objects
+ * from a specific level (for example, when building the first multipoles at the
+ * LeafNode level). A method navigating through all these nodes sequentially is
+ * thus needed, this is the aim of the current function. @n
+ * When a Node calls GetNext, the parent Node is inspected, and children with a
+ * higher index are looked for and returned. If the current node has index 3,
+ * no antecedant node on the same level, and contained in the same quad-tree
+ * subdomain exist. A recursive search is then launched and navigates up the
+ * tree diagram until a larger, neighboring subdomain with greater index than
+ * the current one is found. This subdomain is entered and explored until a Node
+ * matching the caller's level is found, which the method returns. @n
+ * Node::GetNext returns NULL when the recursion tries to look for the
+ * RootNode's parent, indicating no Node with greater index can be found.
+ * @returns A pointer to the next Node found on the same level.
+ */
 Node* Node::GetNext() const {
     // Node is not last in quad tree decomposition. Parent has a child with
     // higher index (which we return, most common case).
@@ -222,6 +243,9 @@ SError Node::TimeEvolution( double dt ) {
  */
 unsigned int Node::GetLevel() const { return level_; }
 
+/** Returns the current Node's index in its local sub-tree.
+ * @returns The Node's index.
+ */
 unsigned int Node::GetIndex() const { return idx_; }
 
 /** @brief Returns true if the argmuent Particle is in the domain
@@ -347,6 +371,7 @@ SError RootNode::TimeEvolution( double dt ) {
  * array to be passed. It is not possible to modify the LeafNode::children_
  * member, that will be left empty.
  * @param[in] parent Pointer to a parent node.
+ * @param[in] child Index of the child within its parent's children subtree.
  */
 LeafNode::LeafNode( Node *parent, unsigned int child )
     :Node(parent,child)
@@ -360,6 +385,7 @@ LeafNode::LeafNode( Node *parent, unsigned int child )
  * array to be passed. It is not possible to modify the LeafNode::children_
  * member, that will be left empty.
  * @param[in] parent Pointer to a parent node.
+ * @param[in] child Index of the child within its parent's children subtree.
  * @param[in] parts Array of Particle objects that are located within the node's
  * boundaries.
  */
