@@ -11,13 +11,17 @@ maxwtime = 60;
 extratime = 10;
 
 %% Distribution parameters (custom, user-filled)
-sim_idx = 0;
+sim_idx = 1;
 simname = 'default';
 savepath= '../input/';
 switch sim_idx
     case 0
         [x,v,m] = ic_alluniform(npart,0,domsize,0,0,1,1);
         simname = 'alluniform';
+    case 1
+        npart = 100000;
+        [x,v,m] = ic_alluniform(npart,0,domsize,0,0,1,1);
+        simname = 'largeuniform';
 end
 % Expect columnwise storage
 data = [x v m];
