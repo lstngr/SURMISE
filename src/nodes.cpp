@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cmath>
 #include "nodes.hpp"
 
@@ -10,8 +11,8 @@ unsigned int Node::maximum_level = 2;
  * @param[in] parent Pointer to a parent node. If none is provided, the pointer
  * is left null and the node is interpreted to be at the root.
  */
-Node::Node( Node *parent )
-    :parent_(parent), children_{NULL,NULL,NULL,NULL}
+Node::Node( Node *parent, unsigned int idx )
+    :parent_(parent), children_{NULL,NULL,NULL,NULL}, idx_(idx)
 {
     if( parent_ != NULL )
         this->level_ = parent_->GetLevel() + 1;
@@ -43,6 +44,38 @@ Node* Node::GetChild( short int child_idx ) const {
     return children_[child_idx];
 }
 
+Node* Node::GetNext() const {
+    // Node is not last in quad tree decomposition. Parent has a child with
+    // higher index (which we return, most common case).
+    if( this->idx_<3 )
+        return this->GetParent()->GetChild( this->idx_ + 1 );
+    // Else, we need to search the next Node among the parents, get the current
+    // node's.
+    Node* nxt( this->GetParent() );
+    // We stepped a level higher. Make sure we return the next node on the same
+    // level.
+    while( true ) {
+        // If reached RootNode, return NULL; we come from the last child of this
+        // RootNode and cannot look further.
+        if( nxt->GetLevel() == 0)
+            return NULL;
+        // This node's parent contains more interesting children, select the
+        // next one (horizontal move in the tree).
+        if( nxt->GetIndex() < 3) {
+            nxt = nxt->GetParent()->GetChild( nxt->GetIndex() + 1 );
+            // We are in a new branch, follow the first child until we're back
+            // at the starting level.
+            while( nxt->GetLevel() != this->level_ )
+                nxt = nxt->GetChild( 0 );
+            return nxt;
+        }
+        // If this statement is reached, this means the investigated parent is
+        // also the last child of the "upper" level, we need to search higher up
+        // the tree.
+        nxt = nxt->GetParent();
+    }
+}
+
 /** @brief Instanciates a child to the current Node.
  * @details This methods dynamically allocates a new node at position `child`
  * in the Node's children_ array.
@@ -53,7 +86,7 @@ Node* Node::GetChild( short int child_idx ) const {
  * @returns An error code.
  */
 SError Node::InitChild( int child ) {
-    this->children_[child] = new Node(this);
+    this->children_[child] = new Node(this,child);
     bool low_quad(child==0 or child==2), left_quad(child==0 or child==1);
     this->children_[child]->SetBounds(
             this->xybnds[0] + 0.5 * (float)(not left_quad) * ( this->xybnds[1] - this->xybnds[0] ),
@@ -89,7 +122,7 @@ SError Node::InitAllChildren() {
  * @returns An error code.
  */
 SError Node::InitLeaf( int child ) {
-    this->children_[child] = new LeafNode(this);
+    this->children_[child] = new LeafNode(this,child);
     bool low_quad(child==0 or child==2), left_quad(child==0 or child==1);
     this->children_[child]->SetBounds(
             this->xybnds[0] + 0.5 * (float)(not left_quad) * ( this->xybnds[1] - this->xybnds[0] ),
@@ -113,6 +146,15 @@ SError Node::InitAllLeafs() {
         this->InitLeaf( ic );
     }
     return E_SUCCESS;
+}
+
+std::array<float,4> Node::GetBounds() const {
+    /// @todo Blame the idiot who wrote this
+    return std::array<float,4>{
+        this->xybnds[0],
+        this->xybnds[1],
+        this->xybnds[2],
+        this->xybnds[3]};
 }
 
 /** @brief Sets the (physical) boundaries of the domain
@@ -180,6 +222,8 @@ SError Node::TimeEvolution( double dt ) {
  */
 unsigned int Node::GetLevel() const { return level_; }
 
+unsigned int Node::GetIndex() const { return idx_; }
+
 /** @brief Returns true if the argmuent Particle is in the domain
  * @details Many more things
  * @param[in] p Pointer to a Particle object.
@@ -202,7 +246,7 @@ bool Node::BelongsTo( Particle *p ) const {
  * contains will be "unpacked" in the class' members.
  */
 RootNode::RootNode( SConfig& cf )
-    :Node(NULL), conf_(cf)
+    :Node(NULL,0), conf_(cf)
 {
     this->SetBounds(0.,this->conf_.dsize,0.,this->conf_.dsize);
 }
@@ -232,6 +276,17 @@ SError RootNode::Run() {
     SError run_err(E_SUCCESS);
     this->Decompose( this->conf_.parts );
     int max_it = this->conf_.max_iter;
+    // TEST ZONE //
+    Node* lowest(this);
+    while( lowest->GetChild(0) != NULL )
+        lowest = lowest->GetChild(0);
+    while( lowest!=NULL ) {
+        std::array<float,4> bnds;
+        bnds = lowest->GetBounds();
+        std::cout << "[LEAF] Level(" << lowest->GetLevel() << ") - Index(" << lowest->GetIndex() << ") - Center(" <<0.5*(bnds[0]+bnds[1]) << "," << 0.5*(bnds[2]+bnds[3]) << ")" << std::endl;
+        lowest = lowest->GetNext();
+    }
+    ///////////////
     for( int it(0); it<max_it; it++ ) {
         // Particles are distributed, perform FMM
         run_err = this->TimeEvolution( this->conf_.dt );
@@ -293,8 +348,8 @@ SError RootNode::TimeEvolution( double dt ) {
  * member, that will be left empty.
  * @param[in] parent Pointer to a parent node.
  */
-LeafNode::LeafNode( Node *parent )
-    :Node(parent)
+LeafNode::LeafNode( Node *parent, unsigned int child )
+    :Node(parent,child)
 {
     // Make sure the storage is not initialized.
     this->subparts_.empty();
@@ -308,8 +363,8 @@ LeafNode::LeafNode( Node *parent )
  * @param[in] parts Array of Particle objects that are located within the node's
  * boundaries.
  */
-LeafNode::LeafNode( Node *parent, std::vector<Particle*> &parts )
-    :Node(parent), subparts_(parts)
+LeafNode::LeafNode( Node *parent, unsigned int child, std::vector<Particle*> &parts )
+    :Node(parent,child), subparts_(parts)
 {}
 
 /** @brief Ends the decomposition procedure.

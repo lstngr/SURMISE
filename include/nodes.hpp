@@ -5,6 +5,7 @@
 #ifndef SURMISE_NODES_HPP_
 #define SURMISE_NODES_HPP_
 
+#include <array>
 #include <vector>
 #include "stypes.hpp"
 #include "serrors.hpp"
@@ -17,22 +18,24 @@
  */
 class Node {
     public:
-        Node(Node *parent = NULL );
+        Node(Node *parent = NULL, unsigned int idx = 0 );
         virtual ~Node();
         Node* GetParent() const;
         Node* GetChild(short int child_idx) const;
+        Node* GetNext() const;
         SError InitChild( int child );
         SError InitLeaf( int leaf );
         SError InitAllChildren();
         SError InitAllLeafs();
+        std::array<float,4> GetBounds() const;
         SError SetBounds(float x1, float x2, float y1, float y2);
         virtual SError Decompose( std::vector<Particle*>& parts );
         virtual SError TimeEvolution( double dt );
         unsigned int GetLevel() const;
+        unsigned int GetIndex() const;
         bool BelongsTo( Particle *p ) const;
-        static unsigned int maximum_level; /** Maximum level of the tree
-                                    @todo Protect scope, check MPI feasability.
-                                    */
+        static unsigned int maximum_level; /*!< Maximum level of the tree
+                                    @todo Protect scope, check MPI feasability.*/
     protected:
     private:
         /** Pointer to parent Node*/
@@ -42,10 +45,9 @@ class Node {
         Node *children_[4];
         /** Level of the Node. The RootNode has level 0.*/
         unsigned int level_;
-        ///@{
+        unsigned int idx_;
         /// Geometrical limits of the node's coverage (of physical space)
         float xybnds[4];
-        ///@}
 };
 
 /** @brief Node at the root of the tree decomposition of the system.
@@ -74,8 +76,8 @@ class RootNode : public Node {
  */
 class LeafNode : public Node {
     public:
-        LeafNode( Node *parent );
-        LeafNode( Node *parent, std::vector<Particle*> &parts );
+        LeafNode( Node *parent, unsigned int child );
+        LeafNode( Node *parent, unsigned int child, std::vector<Particle*> &parts );
         SError Decompose( std::vector<Particle*>& parts ) override;
         SError TimeEvolution( double dt ) override;
     protected:
