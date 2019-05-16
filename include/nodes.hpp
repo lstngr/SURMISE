@@ -39,6 +39,7 @@ class Node {
         SError InitLeaf( int leaf );
         SError InitAllChildren();
         SError InitAllLeafs();
+        std::array<float,2> Center() const;
         std::array<float,4> GetBounds() const;
         SError SetBounds(float x1, float x2, float y1, float y2);
         virtual SError Decompose( std::vector<Particle*>& parts );

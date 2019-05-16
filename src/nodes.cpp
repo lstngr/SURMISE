@@ -167,6 +167,13 @@ bool Node::IsNN( const Node* other ) const {
     return false;
 }
 
+/** @brief Build an array of pointers to the caller's nearest neighbours.
+ * @details This method returns a fixed-size array of pointers to nodes
+ * adjacent (edge and corner sharing) to the calling node. These nodes are
+ * determined using the Node::Move method, so that when encountering walls (i.e.
+ * no nodes), a NULL pointer is returned.
+ * @returns A fixed-size array containing the caller node's nearest neighbours.
+ */
 std::array<Node*,8> Node::GetNN() const {
     // Take ordering convention
     // 2  4   7
@@ -189,6 +196,16 @@ std::array<Node*,8> Node::GetNN() const {
     return nn;
 }
 
+/** @brief Searches and returns the current node's interaction list.
+ * @details In the FMM, the multipole to local translation implies the
+ * propagation of a node's mutlipole to its interaction list, that is, to all
+ * the child nodes located within the children of its parent nearest neighbours,
+ * while excluding the nodes that are directly then nearest neighbours of the
+ * caller. This list amounts to a maximum of 27 elements. The interaction list
+ * array is first filled with NULL pointers, which are replaced as members of
+ * the interaction list are found.
+ * @returns A fixed size array of nodes in the caller's interaction list.
+ */
 std::array<Node*,27> Node::GetIN() const {
     std::array<Node*,8> parentNN( this->GetParent()->GetNN() );
     std::array<Node*,27> in;
@@ -281,8 +298,17 @@ SError Node::InitAllLeafs() {
     return E_SUCCESS;
 }
 
+/** @brief Computes the geometrical center of the calling node from its
+ * boundaries.
+ */
+std::array<float,2> Node::Center() const {
+    return std::array<float,2>{(float)0.5*(this->xybnds[0]+this->xybnds[1]),
+    (float)0.5*(this->xybnds[2]+this->xybnds[3])};
+}
+
+/** @brief Returns an array containing the node's geometrical bounds.
+ */
 std::array<float,4> Node::GetBounds() const {
-    /// @todo Blame the idiot who wrote this
     return std::array<float,4>{
         this->xybnds[0],
         this->xybnds[1],
@@ -423,8 +449,15 @@ SError RootNode::Run() {
         if( upper != NULL ) {
             idxupper = upper->GetIndex();
         }
-        std::cout << "[LEAF] Level(" << lowest->GetLevel() << ") - Index(" << lowest->GetIndex() << ") - Center(" << 0.5*(bnds[0]+bnds[1]) << "," << 0.5*(bnds[2]+bnds[3]) << ") - Right neighbour - (" << idxupper << ")" << std::endl;
+        // std::cout << "[LEAF] Level(" << lowest->GetLevel() << ") - Index(" << lowest->GetIndex() << ") - Center(" << 0.5*(bnds[0]+bnds[1]) << "," << 0.5*(bnds[2]+bnds[3]) << ") - Right neighbour - (" << idxupper << ")" << std::endl;
         std::array<Node*,27> smthg(lowest->GetIN());
+        int ii(0);
+        while( smthg[ii]!=NULL && ii<27 ) {
+            std::array<float,2> cen(smthg[ii]->Center());
+            //std::cout << "Center (" << cen[0] << "," << cen[1] << ") ";
+            ii++;
+        }
+        //std::cout << std::endl;
         lowest = lowest->GetNext();
     }
     ///////////////
