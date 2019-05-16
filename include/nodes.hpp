@@ -10,6 +10,10 @@
 #include "stypes.hpp"
 #include "serrors.hpp"
 
+enum ZDIR {
+    UP=1, DOWN=-1, LEFT=-2, RIGHT=2
+};
+
 /** @class Node
  * @brief Generic Node in the decomposition tree.
  * @details It contains information about its parent domain, children, and has
@@ -23,6 +27,7 @@ class Node {
         Node* GetParent() const;
         Node* GetChild(short int child_idx) const;
         Node* GetNext() const;
+        Node* Move( ZDIR direction ) const;
         SError InitChild( int child );
         SError InitLeaf( int leaf );
         SError InitAllChildren();

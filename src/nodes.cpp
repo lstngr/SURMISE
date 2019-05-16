@@ -100,6 +100,40 @@ Node* Node::GetNext() const {
     }
 }
 
+Node* Node::Move( ZDIR direction ) const {
+    // If at the Root, can't move, return NULL
+    if( this->level_ == 0 )
+        return NULL;
+    // Compute the targeted index
+    int closest_idx( (int)this->idx_ + direction );
+    int target_idx(0);
+    if( direction % 2 == 0 ) {
+        // The direction is LEFT/RIGHT
+        // Required conversion (0,1)<->(2,3), ie flipping the 2nd bit
+        target_idx = this->idx_ ^ 1UL << 1;
+    } else {
+        // The direction is UP/DOWN
+        // Required conversion (0,2)<->(1,3), ie flipping the 1st bit
+        target_idx = this->idx_ ^ 1UL << 0;
+    }
+    if( closest_idx == target_idx ) {
+        // The target index is within the current parent's reach. Can return
+        // directly
+        return this->GetParent()->GetChild( target_idx );
+    }
+    // Else, the requested node is separated by a border defined higher up the
+    // tree. Need to perform the index conversions (0,2)<->(1,3) for up/down
+    // moves and (0,1)<->(2,3) for left/right ones. At first, one could think a
+    // modulo 4 would have been ssufficient, but problems are appearing (for
+    // example, start idx = 3, move up, so mod 4 says zero...)
+    // Try the same move on the parent node.
+    Node* neighbour( this->GetParent()->Move(direction) );
+    // If we reached the Root to realize we're against a wall, return NULL
+    if( neighbour == NULL )
+        return NULL;
+    return neighbour->GetChild( target_idx );
+}
+
 /** @brief Instanciates a child to the current Node.
  * @details This methods dynamically allocates a new node at position `child`
  * in the Node's children_ array.
@@ -308,9 +342,12 @@ SError RootNode::Run() {
     while( lowest->GetLevel() != this->maximum_level+1 )
         lowest = lowest->GetChild(0);
     while( lowest!=NULL ) {
-        std::array<float,4> bnds;
-        bnds = lowest->GetBounds();
-        std::cout << "[LEAF] Level(" << lowest->GetLevel() << ") - Index(" << lowest->GetIndex() << ") - Center(" <<0.5*(bnds[0]+bnds[1]) << "," << 0.5*(bnds[2]+bnds[3]) << ")" << std::endl;
+        // std::array<float,4> bnds(lowest->GetBounds());
+        Node* upper( lowest->Move(RIGHT) );
+        int idxupper(-1);
+        if( upper != NULL )
+            idxupper = upper->GetIndex();
+        // std::cout << "[LEAF] Level(" << lowest->GetLevel() << ") - Index(" << lowest->GetIndex() << ") - Center(" << 0.5*(bnds[0]+bnds[1]) << "," << 0.5*(bnds[2]+bnds[3]) << ") - Right neighbour - (" << idxupper << ")" << std::endl;
         lowest = lowest->GetNext();
     }
     ///////////////
