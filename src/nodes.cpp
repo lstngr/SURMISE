@@ -100,6 +100,26 @@ Node* Node::GetNext() const {
     }
 }
 
+/** @brief Returns the edge sharing Node to the caller in the requested
+ * direction.
+ * @details When discretizing the domain, a recursive quad-tree is built. This
+ * approach leads to separation between nodes in memory to be very different
+ * from their physical separation in the 2D plane in some cases. @n
+ * Consider a Node which's corner is at the center of the simulated region. The
+ * three other nodes sharing this corner lay in well separated regions of the
+ * quad-tree, since the first domain separation that was performed split these
+ * four regions. Hence, the caller node's neighbour would only be found by
+ * browsing the tree upwards until the RootNode, and searching downwards after
+ * that. @n
+ * Clearly, bruteforcing this search is not a good idea, hence the current
+ * function. It takes a direction and returns a pointer to the node neighbouring
+ * the caller in this direction. In the event that the node cannot be found
+ * (encounters the simulated domain's border), a NULL pointer is returned.
+ * @param[in] direction Enumerated type describing all possible directions in a
+ * two dimensional plane, up/down/left/right.
+ * @returns A pointer to the nearest node in the specified direction from the
+ * calling node.
+ */
 Node* Node::Move( ZDIR direction ) const {
     // If at the Root, can't move, return NULL
     if( this->level_ == 0 )

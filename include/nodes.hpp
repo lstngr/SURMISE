@@ -10,6 +10,10 @@
 #include "stypes.hpp"
 #include "serrors.hpp"
 
+/** Enumeration associating a direction and an int. These directions are to be
+ * interpreted in the 2D plane of the simulation, and are used by the methods
+ * lookng for nearest neighbours.
+ */
 enum ZDIR {
     UP=1, DOWN=-1, LEFT=-2, RIGHT=2
 };
