@@ -66,6 +66,9 @@ Node* Node::GetChild( short int child_idx ) const {
  * @returns A pointer to the next Node found on the same level.
  */
 Node* Node::GetNext() const {
+    // If we're at the Root, we want to return immediately.
+    if( this->level_ == 0 )
+        return NULL;
     // Node is not last in quad tree decomposition. Parent has a child with
     // higher index (which we return, most common case).
     if( this->idx_<3 )
@@ -302,7 +305,7 @@ SError RootNode::Run() {
     int max_it = this->conf_.max_iter;
     // TEST ZONE //
     Node* lowest(this);
-    while( lowest->GetChild(0) != NULL )
+    while( lowest->GetLevel() != this->maximum_level+1 )
         lowest = lowest->GetChild(0);
     while( lowest!=NULL ) {
         std::array<float,4> bnds;
