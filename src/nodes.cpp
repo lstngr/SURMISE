@@ -154,6 +154,61 @@ Node* Node::Move( ZDIR direction ) const {
     return neighbour->GetChild( target_idx );
 }
 
+/** Is nearest neighbour?
+ * @todo dx definition dirty.
+ */
+bool Node::IsNN( const Node* other ) const {
+    std::array<float,4> obnds( other->GetBounds() );
+    float dx( this->xybnds[1] - this->xybnds[0] + 1.e-6);
+    if( std::abs( this->xybnds[0] - obnds[0] ) < dx
+            and std::abs( this->xybnds[2] - obnds[2] ) < dx
+            and this!=other)
+        return true;
+    return false;
+}
+
+std::array<Node*,8> Node::GetNN() const {
+    // Take ordering convention
+    // 2  4   7
+    // 1 this 6
+    // 0  3   5
+    std::array<Node*,8> nn;
+    nn.fill( NULL );
+    nn[1] = this->Move(LEFT);
+    if(nn[1] != NULL) {
+        nn[0] = nn[1]->Move(DOWN);
+        nn[2] = nn[1]->Move(UP);
+    }
+    nn[3] = this->Move(DOWN);
+    nn[4] = this->Move(UP);
+    nn[6] = this->Move(RIGHT);
+    if( nn[6] != NULL ) {
+        nn[5] = nn[6]->Move(DOWN);
+        nn[7] = nn[6]->Move(UP);
+    }
+    return nn;
+}
+
+std::array<Node*,27> Node::GetIN() const {
+    std::array<Node*,8> parentNN( this->GetParent()->GetNN() );
+    std::array<Node*,27> in;
+    in.fill( NULL );
+    unsigned int ii(0);
+    Node* child(NULL);
+    for( unsigned int ip(0); ip<8; ip++ ) {
+        if( parentNN[ip] != NULL ) {
+            for( unsigned int ic(0); ic<4; ic++ ) {
+                child = parentNN[ip]->GetChild( ic );
+                if( not this->IsNN(child) ) {
+                    in[ii] = child;
+                    ii++;
+                }
+            }
+        }
+    }
+    return in;
+}
+
 /** @brief Instanciates a child to the current Node.
  * @details This methods dynamically allocates a new node at position `child`
  * in the Node's children_ array.
@@ -362,12 +417,14 @@ SError RootNode::Run() {
     while( lowest->GetLevel() != this->maximum_level+1 )
         lowest = lowest->GetChild(0);
     while( lowest!=NULL ) {
-        // std::array<float,4> bnds(lowest->GetBounds());
+        std::array<float,4> bnds(lowest->GetBounds());
         Node* upper( lowest->Move(RIGHT) );
         int idxupper(-1);
-        if( upper != NULL )
+        if( upper != NULL ) {
             idxupper = upper->GetIndex();
-        // std::cout << "[LEAF] Level(" << lowest->GetLevel() << ") - Index(" << lowest->GetIndex() << ") - Center(" << 0.5*(bnds[0]+bnds[1]) << "," << 0.5*(bnds[2]+bnds[3]) << ") - Right neighbour - (" << idxupper << ")" << std::endl;
+        }
+        std::cout << "[LEAF] Level(" << lowest->GetLevel() << ") - Index(" << lowest->GetIndex() << ") - Center(" << 0.5*(bnds[0]+bnds[1]) << "," << 0.5*(bnds[2]+bnds[3]) << ") - Right neighbour - (" << idxupper << ")" << std::endl;
+        std::array<Node*,27> smthg(lowest->GetIN());
         lowest = lowest->GetNext();
     }
     ///////////////

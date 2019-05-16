@@ -32,6 +32,9 @@ class Node {
         Node* GetChild(short int child_idx) const;
         Node* GetNext() const;
         Node* Move( ZDIR direction ) const;
+        bool IsNN(const Node* other) const;
+        std::array<Node*,8>  GetNN() const;
+        std::array<Node*,27> GetIN() const;
         SError InitChild( int child );
         SError InitLeaf( int leaf );
         SError InitAllChildren();
