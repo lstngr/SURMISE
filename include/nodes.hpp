@@ -39,14 +39,16 @@ class Node {
         SError InitLeaf( int leaf );
         SError InitAllChildren();
         SError InitAllLeafs();
-        std::array<float,2> Center() const;
-        std::array<float,4> GetBounds() const;
+        std::array<double,2> Center() const;
+        std::array<double,4> GetBounds() const;
         SError SetBounds(float x1, float x2, float y1, float y2);
         virtual SError Decompose( std::vector<Particle*>& parts );
         virtual SError TimeEvolution( double dt );
         unsigned int GetLevel() const;
         unsigned int GetIndex() const;
         bool BelongsTo( Particle *p ) const;
+        virtual SError Reassign( Particle* p );
+        virtual SError AddParticle( Particle* p);
         static unsigned int maximum_level; /*!< Maximum level of the tree
                                     @todo Protect scope, check MPI feasability.*/
     protected:
@@ -61,7 +63,7 @@ class Node {
         /** Index of the Node within its parent's children subtree. */
         unsigned int idx_;
         /// Geometrical limits of the node's coverage (of physical space)
-        float xybnds[4];
+        double xybnds[4];
 };
 
 /** @brief Node at the root of the tree decomposition of the system.
@@ -75,6 +77,7 @@ class RootNode : public Node {
         SError Run();
         SError Decompose( std::vector<Particle*>& parts ) override;
         SError TimeEvolution( double dt ) override;
+        SError Reassign( Particle* p ) override;
     protected:
     private:
         /** Configuration of the simulation. We note it contains the relevant
@@ -94,6 +97,8 @@ class LeafNode : public Node {
         LeafNode( Node *parent, unsigned int child, std::vector<Particle*> &parts );
         SError Decompose( std::vector<Particle*>& parts ) override;
         SError TimeEvolution( double dt ) override;
+        SError Reassign( Particle* p ) override;
+        SError AddParticle( Particle* p) override;
     protected:
     private:
         /** Stores the Particle located in the node. They can be used for direct

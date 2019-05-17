@@ -10,6 +10,8 @@
 # Outputs
 *.out
 out/
+*.data
+*.data.old
 # Build and binaries
 build/
 bin/

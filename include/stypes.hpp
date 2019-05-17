@@ -12,10 +12,10 @@
  * itself (position, velocity, mass) as well as flags set by the domain classes.
  */
 struct Particle {
-    float pos[2]; //!< 2D Position of the particle
-    float vel[2]; //!< 2D Velocity of the particle
-    float frc[2]; //!< 2D Force acting on the particle
-    float mass; //!< Mass of the particle
+    double pos[2]; //!< 2D Position of the particle
+    double vel[2]; //!< 2D Velocity of the particle
+    double frc[2]; //!< 2D Force acting on the particle
+    double mass; //!< Mass of the particle
     int id; //!< Mass identifier (so we do not mix them during time-evolution).
 };
 

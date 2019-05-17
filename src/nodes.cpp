@@ -158,8 +158,8 @@ Node* Node::Move( ZDIR direction ) const {
  * @todo dx definition dirty.
  */
 bool Node::IsNN( const Node* other ) const {
-    std::array<float,4> obnds( other->GetBounds() );
-    float dx( this->xybnds[1] - this->xybnds[0] + 1.e-6);
+    std::array<double,4> obnds( other->GetBounds() );
+    double dx( this->xybnds[1] - this->xybnds[0] + 1.e-6);
     if( std::abs( this->xybnds[0] - obnds[0] ) < dx
             and std::abs( this->xybnds[2] - obnds[2] ) < dx
             and this!=other)
@@ -301,15 +301,15 @@ SError Node::InitAllLeafs() {
 /** @brief Computes the geometrical center of the calling node from its
  * boundaries.
  */
-std::array<float,2> Node::Center() const {
-    return std::array<float,2>{(float)0.5*(this->xybnds[0]+this->xybnds[1]),
-    (float)0.5*(this->xybnds[2]+this->xybnds[3])};
+std::array<double,2> Node::Center() const {
+    return std::array<double,2>{(double)0.5*(this->xybnds[0]+this->xybnds[1]),
+    (double)0.5*(this->xybnds[2]+this->xybnds[3])};
 }
 
 /** @brief Returns an array containing the node's geometrical bounds.
  */
-std::array<float,4> Node::GetBounds() const {
-    return std::array<float,4>{
+std::array<double,4> Node::GetBounds() const {
+    return std::array<double,4>{
         this->xybnds[0],
         this->xybnds[1],
         this->xybnds[2],
@@ -372,7 +372,42 @@ SError Node::Decompose( std::vector<Particle*> &parts ) {
  * zero is returned.
  */
 SError Node::TimeEvolution( double dt ) {
-    ///@todo Implement time evolution algorithm.
+    for( unsigned int ic(0); ic<4; ic++ ) {
+        if( this->children_[ic] != NULL )
+            this->children_[ic]->TimeEvolution( dt );
+    }
+    return E_SUCCESS;
+}
+
+SError Node::Reassign( Particle* p ) {
+    // If the particle is not in this domain, must pass to parent and enlarge
+    // search.
+    if( not this->BelongsTo(p) ) {
+        this->GetParent()->Reassign(p);
+    } else {
+        // The particle is in this domain, find which child should get it.
+        Node* recv_node(this);
+        while( recv_node->GetLevel() != maximum_level+1 ) {
+            for( unsigned int ic(0); ic<4; ic++ ) {
+                if( recv_node->GetChild(ic) != NULL ) {
+                    if( recv_node->GetChild(ic)->BelongsTo(p) ) {
+                        // Found the child, shift pointer, break the current
+                        // level's loop and try again until leaf level.
+                        recv_node = recv_node->GetChild(ic);
+                        break;
+                    }
+                }
+            }
+        }
+        // We're at the last level, add the particle to the leaf's stack.
+        recv_node->AddParticle(p);
+    }
+    return E_SUCCESS;
+}
+
+SError Node::AddParticle( Particle* p ) {
+    // A node cannot store particles, redirects to reassignment method.
+    this->Reassign(p);
     return E_SUCCESS;
 }
 
@@ -392,7 +427,7 @@ unsigned int Node::GetIndex() const { return idx_; }
  * @returns Boolean indicating the Particle's belonging to the domain.
  */
 bool Node::BelongsTo( Particle *p ) const {
-    float xp(p->pos[0]); float yp(p->pos[1]);
+    double xp(p->pos[0]); double yp(p->pos[1]);
     if( xp > this->xybnds[0] && xp < this->xybnds[1] &&
             yp > this->xybnds[2] && yp < this->xybnds[3] )
         return true;
@@ -438,29 +473,6 @@ SError RootNode::Run() {
     SError run_err(E_SUCCESS);
     this->Decompose( this->conf_.parts );
     int max_it = this->conf_.max_iter;
-    // TEST ZONE //
-    Node* lowest(this);
-    while( lowest->GetLevel() != this->maximum_level+1 )
-        lowest = lowest->GetChild(0);
-    while( lowest!=NULL ) {
-        std::array<float,4> bnds(lowest->GetBounds());
-        Node* upper( lowest->Move(RIGHT) );
-        int idxupper(-1);
-        if( upper != NULL ) {
-            idxupper = upper->GetIndex();
-        }
-        // std::cout << "[LEAF] Level(" << lowest->GetLevel() << ") - Index(" << lowest->GetIndex() << ") - Center(" << 0.5*(bnds[0]+bnds[1]) << "," << 0.5*(bnds[2]+bnds[3]) << ") - Right neighbour - (" << idxupper << ")" << std::endl;
-        std::array<Node*,27> smthg(lowest->GetIN());
-        int ii(0);
-        while( smthg[ii]!=NULL && ii<27 ) {
-            std::array<float,2> cen(smthg[ii]->Center());
-            //std::cout << "Center (" << cen[0] << "," << cen[1] << ") ";
-            ii++;
-        }
-        //std::cout << std::endl;
-        lowest = lowest->GetNext();
-    }
-    ///////////////
     for( int it(0); it<max_it; it++ ) {
         // Particles are distributed, perform FMM
         run_err = this->TimeEvolution( this->conf_.dt );
@@ -512,6 +524,24 @@ SError RootNode::Decompose( std::vector<Particle*> &parts ) {
  * zero is returned.
  */
 SError RootNode::TimeEvolution( double dt ) {
+    for( unsigned int ic(0); ic<4; ic++)
+        if( this->GetChild(ic) != NULL )
+            this->GetChild(ic)->TimeEvolution(dt);
+    return E_SUCCESS;
+}
+
+SError RootNode::Reassign( Particle* p ) {
+    for( unsigned int ic(0); ic<4; ic++ ) {
+        if( this->GetChild(ic)->BelongsTo(p) ) {
+            // Found the expected child, send the particle there.
+            this->GetChild(ic)->Reassign(p);
+            break;
+        }
+    }
+    // XXX - Reaching this statement, the particle is possibly not assigned to
+    // any domain (i.e. outside the simulated area), and remains unhandled for
+    // the rest of the simulation (it was deleted from its leaf when
+    // reassignment began).
     return E_SUCCESS;
 }
 
@@ -575,5 +605,30 @@ SError LeafNode::Decompose( std::vector<Particle*> &parts ) {
  * zero is returned.
  */
 SError LeafNode::TimeEvolution( double dt ) {
+    for( unsigned int ip(0); ip<this->subparts_.size(); ip++ ) {
+        Particle* p(this->subparts_[ip]);
+        p->frc[0] = 1./float(RAND_MAX) * ( 2.*(float)std::rand() - (float)RAND_MAX );
+        p->frc[1] = 1./float(RAND_MAX) * ( 2.*(float)std::rand() - (float)RAND_MAX );
+        p->vel[0] += p->frc[0] / p->mass * dt;
+        p->vel[1] += p->frc[1] / p->mass * dt;
+        p->pos[0] += p->vel[0] * dt;
+        p->pos[1] += p->vel[1] * dt;
+        if( not this->BelongsTo(p) ) {
+            // Remove the reference to the particle from the leaf and reassign.
+            this->subparts_.erase( this->subparts_.begin() + ip );
+            this->Reassign(p);
+        }
+    }
+    return E_SUCCESS;
+}
+
+SError LeafNode::Reassign( Particle* p ) {
+    this->GetParent()->Reassign( p );
+    return E_SUCCESS;
+}
+
+SError LeafNode::AddParticle( Particle* p ) {
+    // Pushback without asking questions.
+    this->subparts_.push_back(p);
     return E_SUCCESS;
 }
