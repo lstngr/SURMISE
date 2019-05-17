@@ -379,6 +379,21 @@ SError Node::TimeEvolution( double dt ) {
     return E_SUCCESS;
 }
 
+/** @brief  Reassigns a Particle to a new subdomain.
+ * @details After a time evolution step is performed, the particles may hop out
+ * of the LeafNode's domains they were assigned to. In order to keep the FMM
+ * algorithm running correctly, those Particle(s) need to be reassigned to the
+ * correct leaf. The leaf nodes will routinely call this method using a virtual
+ * redirection. @n
+ * When receiving a node pointer, the method checks if the particle is within
+ * its covered area. If not, it passes it to its parent node. Otherwise, it
+ * iterates over its children nodes, identifies the one hosting the particle,
+ * and does so until a leaf is reached, and the particle assigned.
+ * @todo Improve the virtual redirection of the leaf, or even remove it: as long
+ * as the first llines of Node::Reassign still checks if invokking the parent is
+ * needed, we can avoid an override.
+ * @returns An error code.
+ */
 SError Node::Reassign( Particle* p ) {
     // If the particle is not in this domain, must pass to parent and enlarge
     // search.
@@ -405,6 +420,11 @@ SError Node::Reassign( Particle* p ) {
     return E_SUCCESS;
 }
 
+/** @brief Indirection to the leaf's method.
+ * @note Since a node cannot store particle pointers, we assume a reassignement
+ * was meant and call the method from the current Node.
+ * @returns An error code.
+ */
 SError Node::AddParticle( Particle* p ) {
     // A node cannot store particles, redirects to reassignment method.
     this->Reassign(p);
@@ -530,6 +550,15 @@ SError RootNode::TimeEvolution( double dt ) {
     return E_SUCCESS;
 }
 
+/** @brief Reassignement procedure for the most shallow level.
+ * @details If the RootNode is asked to reassign a Particle, it checks whether
+ * it is located in the simulated area at all. If it finds a child hosting the
+ * particle, it is passed down again, see Node::Reassign. Else, the method ends
+ * _without reassigning the particle_.
+ * @note Particle objects hopping out of the simulated area are not reassigned,
+ * and considered lost. May be revised in future versions.
+ * @returns An error code.
+ */
 SError RootNode::Reassign( Particle* p ) {
     for( unsigned int ic(0); ic<4; ic++ ) {
         if( this->GetChild(ic)->BelongsTo(p) ) {
@@ -622,11 +651,20 @@ SError LeafNode::TimeEvolution( double dt ) {
     return E_SUCCESS;
 }
 
+/** @brief Reassigns a Particle to a new domain. The parent function is called.
+ * @param[in] p A pointer to a (local) Particle.
+ * @returns An error code indicating if the method succeeded.
+ */
 SError LeafNode::Reassign( Particle* p ) {
     this->GetParent()->Reassign( p );
     return E_SUCCESS;
 }
 
+/** @brief Adds the particle to the leaf's storage
+ * @note Performs a simple pushback. We assume an antecedent check was performed
+ * to verify the Particle is in the simulated area.
+ * @returns An error code.
+ */
 SError LeafNode::AddParticle( Particle* p ) {
     // Pushback without asking questions.
     this->subparts_.push_back(p);
