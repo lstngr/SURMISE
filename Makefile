@@ -1,5 +1,5 @@
 TARGET=surmise
-export DOXY_VERSION=$(shell git describe --abbrev=8 --dirty --always)
+export DOXY_VERSION=$(shell git describe --abbrev=8 --dirty --always --tags)
 
 #CXX=g++
 CXX=clang++

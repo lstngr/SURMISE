@@ -1,0 +1,39 @@
+/**
+@page Questions Open Questions
+
+@section Currently Implemented
+- float and double problems with domain
+- Node has ever increasing amount of methods. Sign of "bad" programming?
+- Z-curve vs cost of 2D movement operations? MPI decomposition of domains and
+  z-curve jumps?
+- Static members when MPI_Init?
+- Pointers and dynamic memory management a good idea? Scheme for future MPI
+  implementation: every processor has copy of particles and synchronise at the
+  end of iterations, or ask neighbors all the time (prob. this)
+- Advice on error handling with SError (not better to throw? Many if clauses
+  will popup).
+- C style arrays vs C++ ones? 
+- Current memory consumption "high".
+- Virtual indirections and performance? "Is it  bottleneck before fixing?"
+- Use of vectors for LeafNodes, should I reserve?
+- Structure/class flags to avoid?
+@section TODO
+- Wall time management (non-parallelized vs MPI)
+- Domain decomposition (uniform, adaptive), leave choice when starting sim or go
+  for one or the other (w. inheritance or separate codes)?
+- How to reassign particle objects? Either one by one (create MPI type? send as
+  bytes with sizeof) or arrayed (again, MPI type or sizeof?)?
+- Time evolution: store indices of the multipole expansion node wise? Memory
+  issues?
+- Adaptive scheme, how to manage "empty" nodes? Put something in memory just in
+  case? How to navigate a given level?
+- MPI distribution: split levels asap (level0:root, level1:root+P1,
+  level2:root+P1-3, etc...) or wait until level X to distribute everything.
+  Complexity?
+- Outer space particles: right now, end up non-assigned nor updated, disappear
+  at boundaries. Flag such particles?
+- Once force is computed, no need to ask the leafnodes to perform an update on
+  their particles, call rootnode directly (as long as it has an idea which
+  particles are there)?
+
+*/
