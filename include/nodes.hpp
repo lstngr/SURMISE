@@ -41,7 +41,7 @@ class Node {
         SError InitAllLeafs();
         std::array<double,2> Center() const;
         std::array<double,4> GetBounds() const;
-        SError SetBounds(float x1, float x2, float y1, float y2);
+        SError SetBounds(double x1, double x2, double y1, double y2);
         virtual SError Decompose( std::vector<Particle*>& parts );
         virtual SError TimeEvolution( double dt );
         unsigned int GetLevel() const;

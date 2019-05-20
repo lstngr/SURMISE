@@ -239,10 +239,10 @@ SError Node::InitChild( int child ) {
     this->children_[child] = new Node(this,child);
     bool low_quad(child==0 or child==2), left_quad(child==0 or child==1);
     this->children_[child]->SetBounds(
-            this->xybnds[0] + 0.5 * (float)(not left_quad) * ( this->xybnds[1] - this->xybnds[0] ),
-            this->xybnds[1] - 0.5 * (float)left_quad * ( this->xybnds[1] - this->xybnds[0] ),
-            this->xybnds[2] + 0.5 * (float)(not low_quad) * ( this->xybnds[3] - this->xybnds[2] ),
-            this->xybnds[3] - 0.5 * (float)low_quad * ( this->xybnds[3] - this->xybnds[2] )
+            this->xybnds[0] + 0.5 * (double)(not left_quad) * ( this->xybnds[1] - this->xybnds[0] ),
+            this->xybnds[1] - 0.5 * (double)left_quad * ( this->xybnds[1] - this->xybnds[0] ),
+            this->xybnds[2] + 0.5 * (double)(not low_quad) * ( this->xybnds[3] - this->xybnds[2] ),
+            this->xybnds[3] - 0.5 * (double)low_quad * ( this->xybnds[3] - this->xybnds[2] )
             );
     return E_SUCCESS;
 }
@@ -320,7 +320,7 @@ std::array<double,4> Node::GetBounds() const {
  * @param[in] x1,x2,y1,y2 Boundaries of the domain
  * @returns An error code
  */
-SError Node::SetBounds( float x1, float x2, float y1, float y2 ) {
+SError Node::SetBounds( double x1, double x2, double y1, double y2 ) {
     this->xybnds[0] = x1;
     this->xybnds[1] = x2;
     this->xybnds[2] = y1;
