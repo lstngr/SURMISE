@@ -51,6 +51,14 @@ class Node {
         virtual SError AddParticle( Particle* p);
         static unsigned int maximum_level; /*!< Maximum level of the tree
                                     @todo Protect scope, check MPI feasability.*/
+        SError Interact( const Node* other );
+        virtual SError GatherMasses();
+        double GetMass() const;
+        SError SetMass(double m);
+        SError ResetForces();
+        SError AddForce(const std::array<double,2>& upstream_force);
+        std::array<double,2> GetForce() const;
+        virtual std::vector<Particle*> GetParticles() const{return std::vector<Particle*>{};}
     protected:
     private:
         /** Pointer to parent Node*/
@@ -64,6 +72,8 @@ class Node {
         unsigned int idx_;
         /// Geometrical limits of the node's coverage (of physical space)
         double xybnds[4];
+        double mass;
+        std::array<double,2> force;
 };
 
 /** @brief Node at the root of the tree decomposition of the system.
@@ -99,6 +109,8 @@ class LeafNode : public Node {
         SError TimeEvolution( double dt ) override;
         SError Reassign( Particle* p ) override;
         SError AddParticle( Particle* p) override;
+        SError GatherMasses() override;
+        std::vector<Particle*> GetParticles() const override;
     protected:
     private:
         /** Stores the Particle located in the node. They can be used for direct

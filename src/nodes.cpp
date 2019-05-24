@@ -372,6 +372,11 @@ SError Node::Decompose( std::vector<Particle*> &parts ) {
  * zero is returned.
  */
 SError Node::TimeEvolution( double dt ) {
+    if( this->GetLevel() > 2) {
+        std::array<double,2> upstream_force(this->GetParent()->force);
+        this->force[0] += upstream_force[0];
+        this->force[1] += upstream_force[1];
+    }
     for( unsigned int ic(0); ic<4; ic++ ) {
         if( this->children_[ic] != NULL )
             this->children_[ic]->TimeEvolution( dt );
@@ -429,6 +434,41 @@ SError Node::AddParticle( Particle* p ) {
     // A node cannot store particles, redirects to reassignment method.
     this->Reassign(p);
     return E_SUCCESS;
+}
+
+SError Node::Interact( const Node* other ) {
+    std::array<double,2> tcen(this->Center());
+    std::array<double,2> ocen(other->Center());
+    double dist2( (tcen[0]-ocen[0])*(tcen[0]-ocen[0]) + (tcen[1]-ocen[1])*(tcen[1]-ocen[1]) );
+    this->force[0] += - this->mass * other->mass / std::pow(dist2,1.5) * (tcen[0]-ocen[0]);
+    this->force[1] += - this->mass * other->mass / std::pow(dist2,1.5) * (tcen[1]-ocen[1]);
+    return E_SUCCESS;
+}
+
+SError Node::GatherMasses() {
+    this->mass = this->children_[0]->GetMass() + this->children_[1]->GetMass() +this->children_[2]->GetMass() + this->children_[3]->GetMass();
+    return E_SUCCESS;
+}
+
+double Node::GetMass() const { return mass; }
+SError Node::SetMass( double m ){
+    this->mass = m;
+    return E_SUCCESS;
+}
+
+SError Node::ResetForces() {
+    this->force = std::array<double,2>{.0,.0};
+    return E_SUCCESS;
+}
+
+SError Node::AddForce( const std::array<double,2>& upstream_force ) {
+    this->force[0] += upstream_force[0];
+    this->force[1] += upstream_force[1];
+    return E_SUCCESS;
+}
+
+std::array<double,2> Node::GetForce() const {
+    return this->force;
 }
 
 /** Returns the level of the current Node. The RootNode (likely a parent of the
@@ -544,6 +584,44 @@ SError RootNode::Decompose( std::vector<Particle*> &parts ) {
  * zero is returned.
  */
 SError RootNode::TimeEvolution( double dt ) {
+    // Upwards sweep, gather masses
+    for(int iL(this->maximum_level+1); iL>1; iL--) {
+        Node* ptr(this);
+        // Move pointer down the tree (to the expected level)
+        while(ptr->GetLevel()!=iL){
+            ptr = ptr->GetChild(0);
+        }
+        // Iterate on all level nodes
+        do {
+            // Gather children masses
+            ptr->ResetForces();
+            ptr->GatherMasses();
+            ptr = ptr->GetNext();
+        }while( ptr != NULL );
+    }
+    // Downwards sweep, compute interaction on each level
+    for(int iL(2); iL<this->maximum_level+2; iL++) {
+        Node* ptr(this);
+        // Move pointer down the tree (to the expected level)
+        while(ptr->GetLevel()!=iL){
+            ptr = ptr->GetChild(0);
+        }
+        do{
+            // Compute interaction of each cell with far NN.
+            std::array<Node*,27> fnn(ptr->GetIN());
+            for( auto dnode : fnn ) {
+                // Add the interaction of the neighbour if it exists
+                if(dnode!=NULL) {
+                    ptr->Interact(dnode);
+                } else {
+                    // If we reached a NULL, the rest of the table is empty.
+                    break;
+                }
+            }
+            ptr = ptr->GetNext();
+        }while(ptr!=NULL);
+    }
+    // Call children time evolution.
     for( unsigned int ic(0); ic<4; ic++)
         if( this->GetChild(ic) != NULL )
             this->GetChild(ic)->TimeEvolution(dt);
@@ -634,10 +712,28 @@ SError LeafNode::Decompose( std::vector<Particle*> &parts ) {
  * zero is returned.
  */
 SError LeafNode::TimeEvolution( double dt ) {
+    if( this->GetLevel() > 2) {
+        std::array<double,2> upstream_force(this->GetParent()->GetForce());
+        this->AddForce( upstream_force );
+    }
     for( unsigned int ip(0); ip<this->subparts_.size(); ip++ ) {
         Particle* p(this->subparts_[ip]);
-        p->frc[0] = 1./float(RAND_MAX) * ( 2.*(float)std::rand() - (float)RAND_MAX );
-        p->frc[1] = 1./float(RAND_MAX) * ( 2.*(float)std::rand() - (float)RAND_MAX );
+        // Add upstream force (Barnes-Hut)
+        std::array<double,2> mfrc(this->GetForce());
+        p->frc[0] = mfrc[0]; p->frc[1] = mfrc[1];
+        std::array<Node*,8> nn(this->GetNN());
+        for( int inn(0); inn<8; inn++ ){
+            if(nn[inn]!=NULL) {
+                std::vector<Particle*> nnp(nn[inn]->GetParticles());
+                for( unsigned int ip2(0); ip2<nnp.size(); ip2++ ){
+                    if(this->subparts_[ip]!=nnp[ip2]){
+                        std::array<double,2> ppfrc(p->PForce(nnp[ip2]));
+                        p->frc[0] += ppfrc[0];
+                        p->frc[1] += ppfrc[1];
+                    }
+                }
+            }
+        }
         p->vel[0] += p->frc[0] / p->mass * dt;
         p->vel[1] += p->frc[1] / p->mass * dt;
         p->pos[0] += p->vel[0] * dt;
@@ -669,4 +765,15 @@ SError LeafNode::AddParticle( Particle* p ) {
     // Pushback without asking questions.
     this->subparts_.push_back(p);
     return E_SUCCESS;
+}
+
+SError LeafNode::GatherMasses() {
+    this->SetMass(0.);
+    for( auto p : subparts_ )
+        this->SetMass( p->mass + this->GetMass() );
+    return E_SUCCESS;
+}
+
+std::vector<Particle*> LeafNode::GetParticles() const {
+    return this->subparts_;
 }
