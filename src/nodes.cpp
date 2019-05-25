@@ -537,6 +537,9 @@ SError RootNode::Run() {
         // Particles are distributed, perform FMM
         run_err = this->TimeEvolution( this->conf_.dt );
         /// @todo Error management, check computational cost.
+        for(auto p : this->conf_.parts ) {
+            std::cout << p->id << "," << p->pos[0] << "," << p->pos[1] << "," << p->vel[0] << "," << p->vel[1] << "," << p->frc[0] << "," << p->frc[1] << std::endl;
+        }
     }
     return run_err;
 }
@@ -721,12 +724,22 @@ SError LeafNode::TimeEvolution( double dt ) {
         // Add upstream force (Barnes-Hut)
         std::array<double,2> mfrc(this->GetForce());
         p->frc[0] = mfrc[0]; p->frc[1] = mfrc[1];
+        // Add force from particles within same region
+        for( unsigned int ip2(0); ip2<this->subparts_.size(); ip2++ ) {
+            Particle* other(this->subparts_[ip2]);
+            if( p!=other ) {
+                std::array<double,2> ppfrc(p->PForce(other));
+                p->frc[0] += ppfrc[0];
+                p->frc[1] += ppfrc[1];
+            }
+        }
+        // Add force from nearest neighbours
         std::array<Node*,8> nn(this->GetNN());
         for( int inn(0); inn<8; inn++ ){
             if(nn[inn]!=NULL) {
                 std::vector<Particle*> nnp(nn[inn]->GetParticles());
                 for( unsigned int ip2(0); ip2<nnp.size(); ip2++ ){
-                    if(this->subparts_[ip]!=nnp[ip2]){
+                    if(p!=nnp[ip2]){
                         std::array<double,2> ppfrc(p->PForce(nnp[ip2]));
                         p->frc[0] += ppfrc[0];
                         p->frc[1] += ppfrc[1];

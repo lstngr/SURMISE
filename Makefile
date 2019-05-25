@@ -2,7 +2,7 @@ TARGET=surmise
 export DOXY_VERSION=$(shell git describe --abbrev=8 --dirty --always --tags)
 
 CXX=clang++
-CXXFLAGS=-std=c++11 -g -Wall -pedantic -O0 -fno-stack-protector
+CXXFLAGS=-std=c++11 -g -Wall -pedantic -O3 #-fno-stack-protector
 LDFLAGS=
 LDLIBS=
 

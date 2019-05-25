@@ -67,7 +67,7 @@ template<typename T> T ConfigFile::get(const std::string& key) const{
     if ( val != configMap.end() ) {
         std::istringstream iss(val->second);
         iss >> out;
-        std::cout << "\t" << key << "=" << out << std::endl;
+        //std::cout << "\t" << key << "=" << out << std::endl;
     }else{
         std::cerr << "[ConfigFile] Le parametre suivant est manquant : " << key << std::endl;
     }
