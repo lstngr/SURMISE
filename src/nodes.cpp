@@ -440,8 +440,8 @@ SError Node::Interact( const Node* other ) {
     std::array<double,2> tcen(this->Center());
     std::array<double,2> ocen(other->Center());
     double dist2( (tcen[0]-ocen[0])*(tcen[0]-ocen[0]) + (tcen[1]-ocen[1])*(tcen[1]-ocen[1]) );
-    this->force[0] += - this->mass * other->mass / std::pow(dist2,1.5) * (tcen[0]-ocen[0]);
-    this->force[1] += - this->mass * other->mass / std::pow(dist2,1.5) * (tcen[1]-ocen[1]);
+    this->force[0] += - this->mass * other->mass / dist2 * (tcen[0]-ocen[0]);
+    this->force[1] += - this->mass * other->mass / dist2 * (tcen[1]-ocen[1]);
     return E_SUCCESS;
 }
 

@@ -8,6 +8,20 @@ function out=read_output( filename )
 % Returns:
 %   - out: Structure storing the simulation's output
 
+% === NOTE ===
+% Will be adapted to CSV formatted files in a future version. Will expect
+% following structure (header part, data part)
+% " property1,value1
+% " property2,value2
+% " ...
+% " propertyN,valueN
+% " 0,x,y,vx,vy,fx,fy
+% " 1,x,y,vx,vy,fx,fy
+% " ...
+% " M,x,y,vx,vy,fx,fy
+% Where M,N known integers (particle count and parameter number)
+% === ==== ===
+
 data = csvread(filename);
 pnum = max(data(:,1)) + 1;
 disp([num2str(pnum),' particles found'])

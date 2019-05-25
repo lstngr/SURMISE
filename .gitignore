@@ -9,6 +9,7 @@
 /input
 # Outputs
 *.out
+*.test
 out/
 *.data
 *.data.old
