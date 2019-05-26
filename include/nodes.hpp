@@ -59,6 +59,7 @@ class Node {
         SError ResetForces();
         SError AddForce(const std::array<double,2>& upstream_force);
         std::array<double,2> GetForce() const;
+        /** Returns an empty vector of particles. @todo Ugly AF.*/
         virtual std::vector<Particle*> GetParticles() const{return std::vector<Particle*>{};}
     protected:
     private:
@@ -73,7 +74,9 @@ class Node {
         unsigned int idx_;
         /// Geometrical limits of the node's coverage (of physical space)
         double xybnds[4];
+        /** Total mass of the Node.*/
         double mass;
+        /**Force applied on the Node's _geometrical_ center.*/
         std::array<double,2> force;
 };
 

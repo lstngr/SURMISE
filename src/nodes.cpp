@@ -385,6 +385,11 @@ SError Node::TimeEvolution( double dt ) {
     return E_SUCCESS;
 }
 
+/** Recursively calls leaf nodes' implementation of the method to update the
+ * positions and velocities of the simulated particles.
+ * @param[in] dt Time step for the temporal evolution.
+ * @returns An error code
+ */
 SError Node::TimeEvolutionMasses(double dt) {
     for( auto c : this->children_ )
         c->TimeEvolutionMasses(dt);
@@ -443,6 +448,21 @@ SError Node::AddParticle( Particle* p ) {
     return E_SUCCESS;
 }
 
+/** @brief Computes the force between two given nodes.
+ * @details This method updates the current node's forces by adding the
+ * contribution of a distant node (passed as parameter). The force is computed
+ * between the nodes' _geometrical_ centers. It is based only on the total mass
+ * of the nodes (and not a multipole expansion of these). In principle, nodes
+ * from different levels may call this method.
+ * @note Although gravitational interaction is a symmetric process, this method
+ * only updates the force of the caller node. A separate call is needed if the
+ * remote node requires the influence of the caller node to be accounted for.
+ * @param[in] other Pointer to a remote node which's interaction must be
+ * accounted for.
+ * @todo Try to symmetrize force updates and consider their center of mass
+ * instead of their geometrical one.
+ * @returns An error code.
+ */
 SError Node::Interact( const Node* other ) {
     std::array<double,2> tcen(this->Center());
     std::array<double,2> ocen(other->Center());
@@ -452,29 +472,59 @@ SError Node::Interact( const Node* other ) {
     return E_SUCCESS;
 }
 
+/** @brief Updates the total mass of the current Node.
+ * @details Computes the total mass of the caller Node by summing the mass of
+ * its children. This function calls the method Node::GetMass from its children,
+ * thus, the mass of the children is not updated nor modified by this call. The
+ * children nodes thus need to be updated for the opreations performed by this
+ * function to make sense. This is done by calling Node::GatherMasses for all
+ * children prior to calling this function.
+ * @returns An error code.
+ */
 SError Node::GatherMasses() {
     this->mass = this->children_[0]->GetMass() + this->children_[1]->GetMass() +this->children_[2]->GetMass() + this->children_[3]->GetMass();
     return E_SUCCESS;
 }
 
+/** Accessor to the current node's mass.
+ * @returns The node's total mass.
+ */
 double Node::GetMass() const { return mass; }
+
+/** Sets a node's total mass. This methods just sets the mass and does not
+ * perform any other kind of computation.
+ * @param[in] m Mass that needs to be registered in the node object.
+ * @returns An error code.
+ */
 SError Node::SetMass( double m ){
     this->mass = m;
     return E_SUCCESS;
 }
 
+/** Sets the caller node's forces to zero. This method is called for the whole
+ * tree before starting time evolution computations.
+ * @returns An error code.
+ */
 SError Node::ResetForces() {
     this->force[0] = 0.;
     this->force[1] = 0.;
     return E_SUCCESS;
 }
 
+/** Adds a 2D force to the current node.
+ * @param[in] upstream_force Reference to a size-2 array.
+ * @returns An error code.
+ */
 SError Node::AddForce( const std::array<double,2>& upstream_force ) {
     this->force[0] += upstream_force[0];
     this->force[1] += upstream_force[1];
     return E_SUCCESS;
 }
 
+/** Accessor to the caller node's force.
+ * @todo If performance hit, remove the array copy for something fancier.
+ * @returns A copy of the force acting on the node's center.
+ */
 std::array<double,2> Node::GetForce() const {
     return this->force;
 }
@@ -546,9 +596,9 @@ SError RootNode::Run() {
         run_err = this->TimeEvolution( this->conf_.dt );
         run_err = this->TimeEvolutionMasses( this->conf_.dt );
         /// @todo Error management, check computational cost.
-        for(auto p : this->conf_.parts ) {
-            //std::cout << std::setprecision(10) << p->id << "," << p->mass << "," << p->pos[0] << "," << p->pos[1] << "," << p->vel[0] << "," << p->vel[1] << "," << p->frc[0] << "," << p->frc[1] << std::endl;
-        }
+        // for(auto p : this->conf_.parts ) {
+        //     std::cout << std::setprecision(10) << p->id << "," << p->mass << "," << p->pos[0] << "," << p->pos[1] << "," << p->vel[0] << "," << p->vel[1] << "," << p->frc[0] << "," << p->frc[1] << std::endl;
+        // }
     }
     return run_err;
 }
@@ -760,6 +810,15 @@ SError LeafNode::TimeEvolution( double dt ) {
     return E_SUCCESS;
 }
 
+/** @brief Updates a leaf's particles positions and velocities.
+ * @details This method applies the forces computed by LeafNode::TimeEvolution
+ * to the LeafNode's particles for a timestep 'dt'. Once the update is
+ * performed, the particles' positions are checked to see whether a domain
+ * reassignement is required. Such a function allows decoupling the force
+ * computation and the particle's temporal evolution.
+ * @param[in] dt Time step for the temporal evolution.
+ * @returns An error code.
+ */
 SError LeafNode::TimeEvolutionMasses(double dt) {
     for( unsigned int ip(0); ip<this->subparts_.size(); ip++ ) {
         Particle* p(this->subparts_[ip]);
@@ -796,6 +855,9 @@ SError LeafNode::AddParticle( Particle* p ) {
     return E_SUCCESS;
 }
 
+/** Sets the leaf's mass as the sum of the particles it contains.
+ * @returns An error code.
+ */
 SError LeafNode::GatherMasses() {
     this->SetMass(0.);
     for( auto p : subparts_ )
@@ -803,6 +865,15 @@ SError LeafNode::GatherMasses() {
     return E_SUCCESS;
 }
 
+/** @brief Returns the current leaf's particles list.
+ * @details This method aims to provide access to particles living in a given
+ * leaf. It is useful when computing the nearest neighbor forces, as in
+ * LeafNode::TimeEvolution.
+ * @todo Remainder to check whether this is a performance issue. If yes, provide
+ * "sequential" accessor to avoid returning the whole particle container (or
+ * return a reference, or whatever, this copy is just plain dirty).
+ * @returns A copy of the pointers to particles stored in the caller leaf.
+ */
 std::vector<Particle*> LeafNode::GetParticles() const {
     return this->subparts_;
 }
