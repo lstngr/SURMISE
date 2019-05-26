@@ -4,16 +4,16 @@
 %% Basic parameters
 domsize = 100;
 npart = 10;
-dt = 1e-4;
+dt = 1e-2;
 epsilon = 0.1;
 maxiter = 1000;
 maxwtime = 60;
 extratime = 10;
 
 %% Distribution parameters (custom, user-filled)
-sim_idx = 1;
+sim_idx = 3;
 simname = 'default';
-savepath= '../input/';
+savepath= './';
 switch sim_idx
     case 0
         [x,v,m] = ic_alluniform(npart,0,domsize,0,0,1,1);
@@ -22,6 +22,20 @@ switch sim_idx
         npart = 100000;
         [x,v,m] = ic_alluniform(npart,0,domsize,0,0,1,1);
         simname = 'largeuniform';
+    case 2
+        npart = 100;
+        vrad = 8;
+        vstd = 2;
+        [x,v,m] = ic_radial(npart,0,domsize,vrad,vstd,0.05,1);
+        simname = 'medradial';
+    case 3
+        npart=1;
+        [x,v,m] = ic_alluniform(npart,0,domsize,0,0,1,1);
+        simname = 'easy';
+    case 4
+        npart=2;
+        [x,v,m] = ic_alluniform(npart,0,domsize,0,0,1,1);
+        simname = 'easytoo';
 end
 % Expect columnwise storage
 data = [x v m];
