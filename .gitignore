@@ -20,3 +20,9 @@ bin/
 tags
 # Matlab shitty temps
 **/*.*~
+# LaTeX Shitty files
+/Report/**/*.eps
+/Report/**/*.pdf
+/Report/**/*.aux
+/Report/**/*.log
+/Report/**/*.gz
