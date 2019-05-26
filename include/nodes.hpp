@@ -44,6 +44,7 @@ class Node {
         SError SetBounds(double x1, double x2, double y1, double y2);
         virtual SError Decompose( std::vector<Particle*>& parts );
         virtual SError TimeEvolution( double dt );
+        virtual SError TimeEvolutionMasses( double dt );
         unsigned int GetLevel() const;
         unsigned int GetIndex() const;
         bool BelongsTo( Particle *p ) const;
@@ -107,6 +108,7 @@ class LeafNode : public Node {
         LeafNode( Node *parent, unsigned int child, std::vector<Particle*> &parts );
         SError Decompose( std::vector<Particle*>& parts ) override;
         SError TimeEvolution( double dt ) override;
+        SError TimeEvolutionMasses( double dt ) override;
         SError Reassign( Particle* p ) override;
         SError AddParticle( Particle* p) override;
         SError GatherMasses() override;

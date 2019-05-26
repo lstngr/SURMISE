@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <cmath>
 #include "nodes.hpp"
 
@@ -275,10 +276,10 @@ SError Node::InitLeaf( int child ) {
     this->children_[child] = new LeafNode(this,child);
     bool low_quad(child==0 or child==2), left_quad(child==0 or child==1);
     this->children_[child]->SetBounds(
-            this->xybnds[0] + 0.5 * (float)(not left_quad) * ( this->xybnds[1] - this->xybnds[0] ),
-            this->xybnds[1] - 0.5 * (float)left_quad * ( this->xybnds[1] - this->xybnds[0] ),
-            this->xybnds[2] + 0.5 * (float)(not low_quad) * ( this->xybnds[3] - this->xybnds[2] ),
-            this->xybnds[3] - 0.5 * (float)low_quad * ( this->xybnds[3] - this->xybnds[2] )
+            this->xybnds[0] + 0.5 * (double)(not left_quad) * ( this->xybnds[1] - this->xybnds[0] ),
+            this->xybnds[1] - 0.5 * (double)left_quad * ( this->xybnds[1] - this->xybnds[0] ),
+            this->xybnds[2] + 0.5 * (double)(not low_quad) * ( this->xybnds[3] - this->xybnds[2] ),
+            this->xybnds[3] - 0.5 * (double)low_quad * ( this->xybnds[3] - this->xybnds[2] )
             );
     return E_SUCCESS;
 }
@@ -384,6 +385,12 @@ SError Node::TimeEvolution( double dt ) {
     return E_SUCCESS;
 }
 
+SError Node::TimeEvolutionMasses(double dt) {
+    for( auto c : this->children_ )
+        c->TimeEvolutionMasses(dt);
+    return E_SUCCESS;
+}
+
 /** @brief  Reassigns a Particle to a new subdomain.
  * @details After a time evolution step is performed, the particles may hop out
  * of the LeafNode's domains they were assigned to. In order to keep the FMM
@@ -457,7 +464,8 @@ SError Node::SetMass( double m ){
 }
 
 SError Node::ResetForces() {
-    this->force = std::array<double,2>{.0,.0};
+    this->force[0] = 0.;
+    this->force[1] = 0.;
     return E_SUCCESS;
 }
 
@@ -536,9 +544,10 @@ SError RootNode::Run() {
     for( int it(0); it<max_it; it++ ) {
         // Particles are distributed, perform FMM
         run_err = this->TimeEvolution( this->conf_.dt );
+        run_err = this->TimeEvolutionMasses( this->conf_.dt );
         /// @todo Error management, check computational cost.
         for(auto p : this->conf_.parts ) {
-            std::cout << p->id << "," << p->pos[0] << "," << p->pos[1] << "," << p->vel[0] << "," << p->vel[1] << "," << p->frc[0] << "," << p->frc[1] << std::endl;
+            //std::cout << std::setprecision(10) << p->id << "," << p->mass << "," << p->pos[0] << "," << p->pos[1] << "," << p->vel[0] << "," << p->vel[1] << "," << p->frc[0] << "," << p->frc[1] << std::endl;
         }
     }
     return run_err;
@@ -747,6 +756,13 @@ SError LeafNode::TimeEvolution( double dt ) {
                 }
             }
         }
+    }
+    return E_SUCCESS;
+}
+
+SError LeafNode::TimeEvolutionMasses(double dt) {
+    for( unsigned int ip(0); ip<this->subparts_.size(); ip++ ) {
+        Particle* p(this->subparts_[ip]);
         p->vel[0] += p->frc[0] / p->mass * dt;
         p->vel[1] += p->frc[1] / p->mass * dt;
         p->pos[0] += p->vel[0] * dt;
