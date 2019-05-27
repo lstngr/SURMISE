@@ -468,8 +468,8 @@ SError Node::Interact( const Node* other ) {
     std::array<double,2> tcen(this->Center());
     std::array<double,2> ocen(other->Center());
     double dist2( (tcen[0]-ocen[0])*(tcen[0]-ocen[0]) + (tcen[1]-ocen[1])*(tcen[1]-ocen[1]) );
-    this->force[0] += - this->mass * other->mass / dist2 * (tcen[0]-ocen[0]);
-    this->force[1] += - this->mass * other->mass / dist2 * (tcen[1]-ocen[1]);
+    this->force[0] += - other->mass / dist2 * (tcen[0]-ocen[0]);
+    this->force[1] += - other->mass / dist2 * (tcen[1]-ocen[1]);
     return E_SUCCESS;
 }
 
@@ -795,7 +795,7 @@ SError LeafNode::TimeEvolution( double dt ) {
         Particle* p(this->subparts_[ip]);
         // Add upstream force (Barnes-Hut)
         std::array<double,2> mfrc(this->GetForce());
-        p->frc[0] = mfrc[0]; p->frc[1] = mfrc[1];
+        p->frc[0] = p->mass*mfrc[0]; p->frc[1] = p->mass*mfrc[1];
         // Add force from particles within same region
         for( unsigned int ip2(0); ip2<this->subparts_.size(); ip2++ ) {
             Particle* other(this->subparts_[ip2]);
