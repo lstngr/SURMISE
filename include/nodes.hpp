@@ -61,6 +61,7 @@ class Node {
         std::array<double,2> GetForce() const;
         /** Returns an empty vector of particles. @todo Ugly AF.*/
         virtual std::vector<Particle*> GetParticles() const{return std::vector<Particle*>{};}
+        SError SetCOM(const std::array<double,2>& cen);
     protected:
     private:
         /** Pointer to parent Node*/
@@ -78,6 +79,8 @@ class Node {
         double mass;
         /**Force applied on the Node's _geometrical_ center.*/
         std::array<double,2> force;
+        /**Node's center of mass*/
+        std::array<double,2> com;
 };
 
 /** @brief Node at the root of the tree decomposition of the system.

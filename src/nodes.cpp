@@ -303,8 +303,9 @@ SError Node::InitAllLeafs() {
  * boundaries.
  */
 std::array<double,2> Node::Center() const {
-    return std::array<double,2>{(double)0.5*(this->xybnds[0]+this->xybnds[1]),
-    (double)0.5*(this->xybnds[2]+this->xybnds[3])};
+    return this->com;
+    /*return std::array<double,2>{(double)0.5*(this->xybnds[0]+this->xybnds[1]),
+    (double)0.5*(this->xybnds[2]+this->xybnds[3])};*/
 }
 
 /** @brief Returns an array containing the node's geometrical bounds.
@@ -483,6 +484,13 @@ SError Node::Interact( const Node* other ) {
  */
 SError Node::GatherMasses() {
     this->mass = this->children_[0]->GetMass() + this->children_[1]->GetMass() +this->children_[2]->GetMass() + this->children_[3]->GetMass();
+    if( this->mass != 0.0 ) {
+        this->com[0] = ( this->children_[0]->GetMass() * this->children_[0]->com[0] + this->children_[1]->GetMass() * this->children_[1]->com[0] + this->children_[2]->GetMass() * this->children_[2]->com[0] + this->children_[3]->GetMass() * this->children_[3]->com[0] ) / this->mass;
+        this->com[1] = ( this->children_[0]->GetMass() * this->children_[0]->com[1] + this->children_[1]->GetMass() * this->children_[1]->com[1] + this->children_[2]->GetMass() * this->children_[2]->com[1] + this->children_[3]->GetMass() * this->children_[3]->com[1] ) / this->mass;
+    } else {
+        this->com = std::array<double,2>{(double)0.5*(this->xybnds[0]+this->xybnds[1]),
+            (double)0.5*(this->xybnds[2]+this->xybnds[3])};
+    }
     return E_SUCCESS;
 }
 
@@ -527,6 +535,11 @@ SError Node::AddForce( const std::array<double,2>& upstream_force ) {
  */
 std::array<double,2> Node::GetForce() const {
     return this->force;
+}
+
+SError Node::SetCOM( const std::array<double,2>& cen ) {
+    this->com = cen;
+    return E_SUCCESS;
 }
 
 /** Returns the level of the current Node. The RootNode (likely a parent of the
@@ -596,9 +609,9 @@ SError RootNode::Run() {
         run_err = this->TimeEvolution( this->conf_.dt );
         run_err = this->TimeEvolutionMasses( this->conf_.dt );
         /// @todo Error management, check computational cost.
-        // for(auto p : this->conf_.parts ) {
-        //     std::cout << std::setprecision(10) << p->id << "," << p->mass << "," << p->pos[0] << "," << p->pos[1] << "," << p->vel[0] << "," << p->vel[1] << "," << p->frc[0] << "," << p->frc[1] << std::endl;
-        // }
+        for(auto p : this->conf_.parts ) {
+            std::cout << std::setprecision(10) << p->id << "," << p->mass << "," << p->pos[0] << "," << p->pos[1] << "," << p->vel[0] << "," << p->vel[1] << "," << p->frc[0] << "," << p->frc[1] << std::endl;
+        }
     }
     return run_err;
 }
@@ -860,8 +873,22 @@ SError LeafNode::AddParticle( Particle* p ) {
  */
 SError LeafNode::GatherMasses() {
     this->SetMass(0.);
+    double m(0.);
     for( auto p : subparts_ )
-        this->SetMass( p->mass + this->GetMass() );
+        m+= p->mass;
+    this->SetMass( m );
+    std::array<double,2> cen({0.,0.});
+    if(this->GetMass()==0.0){
+        std::array<double,4> xybnds = this->GetBounds();
+        cen = std::array<double,2>{(double)0.5*(xybnds[0]+xybnds[1]),
+            (double)0.5*(xybnds[2]+xybnds[3])};
+    } else {
+        for( auto p : subparts_ ) {
+            cen[0] += p->mass * p->pos[0] / this->GetMass();
+            cen[1] += p->mass * p->pos[1] / this->GetMass();
+        }
+    }
+    this->SetCOM(cen);
     return E_SUCCESS;
 }
 
