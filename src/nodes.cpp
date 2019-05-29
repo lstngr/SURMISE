@@ -5,15 +5,16 @@
 
 //////////////////// NODE ///////////////////////
 
-Node::Node( const SConfig& conf )
+Node::Node( double left, double right, double top, double bottom )
     :Node(NULL,NULL)
 {
     // Level, index, left and bottom are already initialized correctly.
-    top = conf.dsize; right = conf.dsize;
+    this->top_ = top; this->right_ = right;
+    this->bottom_ = bottom; this->left_ = left;
 }
 
 Node::Node( Node* parent, Particle* part )
-    :parent_(parent), children_{NULL,NULL,NULL,NULL}, level_(0), index_(0), com_(part), left(0.0), right(0.0), top(0.0), bottom(0.0)
+    :parent_(parent), children_{NULL,NULL,NULL,NULL}, level_(0), index_(0), com_(part), left_(0.0), right_(0.0), top_(0.0), bottom_(0.0)
 {
     // If parent exists, we can infer some properties (such as index, level,
     // boundaries) to the current node.
@@ -31,10 +32,10 @@ Node::Node( Node* parent, Particle* part )
                 // east.
                 bool is_north( ic & 1U );
                 bool is_east( (ic>>1) & 1U );
-                left   = parent_->left   + 0.5*(double)(is_east)  *(parent_->right-parent_->left);
-                right  = parent_->right  - 0.5*(double)(!is_east) *(parent_->right-parent_->left);
-                bottom = parent_->bottom + 0.5*(double)(is_north) *(parent_->top-parent_->bottom);
-                top    = parent_->top    - 0.5*(double)(!is_north)*(parent_->top-parent_->bottom);
+                left_   = parent_->left_   + 0.5*(double)(is_east)  *(parent_->right_-parent_->left_);
+                right_  = parent_->right_  - 0.5*(double)(!is_east) *(parent_->right_-parent_->left_);
+                bottom_ = parent_->bottom_ + 0.5*(double)(is_north) *(parent_->top_-parent_->bottom_);
+                top_    = parent_->top_    - 0.5*(double)(!is_north)*(parent_->top_-parent_->bottom_);
                 // We found the node, break iteration
                 break;
             }
@@ -938,4 +939,44 @@ SError LeafNode::GatherMasses() {
  */
 std::vector<Particle*> LeafNode::GetParticles() const {
     return this->subparts_;
+}
+
+/* ------------------------------------------- */
+
+QuadTree::QuadTree( const SConfig& config )
+    :root_(new Node(0.0,config.dsize,config.dsize,0.0)
+{}
+
+QuadTree::~QuadTree() {
+    if( root_ != NULL )
+        delete root_;
+}
+
+SError QuadTree::AddParticle( Particle* p ){
+    Node* ptr(this->root_);
+    while(true){
+        if( ptr->IsLeaf() ) {
+            // Insert and
+            // return E_SUCCESS;
+        }
+        for( unsigned ic(0); ic<4; ic++ ) {
+            if( ptr->GetChild(ic) != NULL ) {
+                if( ptr->GetChild(ic)->BelongsTo(p) ) {
+                    ptr = ptr->GetChild(ic);
+                    break;
+                }
+            } else if ( ic==3 ) {
+                // The node we need is not initialized
+                // Create it, assign particle, exit
+            }
+        }
+
+    }
+    return E_SUCCESS;
+}
+
+SError QuadTree::AddParticle( std::vector<Particle*> p ) {
+    for( auto ap : p )
+        this->AddParticle( ap );
+    return E_SUCCESS;
 }

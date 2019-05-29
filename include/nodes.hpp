@@ -26,7 +26,7 @@ enum ZDIR {
  */
 class Node {
     public:
-        Node( const SConfig& conf );
+        Node( double left, double right, double top, double bottom );
         virtual ~Node();
         Node* GetParent() const;
         Node* GetChild(short int child_idx) const;
@@ -38,7 +38,6 @@ class Node {
         long long GetIndex() const;
         double GetMass() const;
         bool BelongsTo( Particle *p ) const;
-    protected:
     private:
         Node(Node *parent, Particle *part);
         /** Pointer to parent Node*/
@@ -50,7 +49,7 @@ class Node {
         unsigned long long index_;
         Particle* com_;
         /// Geometrical limits of the node's coverage (of physical space)
-        long double left,right,top,bottom;
+        long double left_,right_,top_,bottom_;
 };
 
 class QuadTree {
@@ -59,7 +58,6 @@ class QuadTree {
         ~QuadTree();
         SError AddParticle( Particle* p );
         SError AddParticle( std::vector<Particle*> p );
-    protected:
     private:
         Node* root_;
 };

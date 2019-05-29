@@ -15,6 +15,10 @@ class Simulation {
         ~Simulation();
         SError Run();
     private:
+        SError BuildTree();
+        SError UpdateTree();
+        SError ComputeForces();
+        SError TimeEvolution();
         SConfig conf_;
         QuadTree* tree_;
 };

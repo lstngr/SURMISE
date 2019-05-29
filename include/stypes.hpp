@@ -18,8 +18,9 @@ struct Particle {
     double frc[2]; //!< 2D Force acting on the particle
     double mass; //!< Mass of the particle
     long id; //!< Mass identifier (so we do not mix them during time-evolution).
-    std::array<double,2> PForce(const Particle* p) const;
+    Particle& operator+=( const Particle& other );
 };
+Particle operator+( Particle lhs, const Particle& rhs );
 
 /** @brief Structure containing the simulation parameters.
  * @details Will be read by the root MPI process and passed to other instances
