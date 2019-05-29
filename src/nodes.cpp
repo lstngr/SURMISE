@@ -3,10 +3,44 @@
 #include <cmath>
 #include "nodes.hpp"
 
-// Declare the static member here (not in the header!)
-unsigned int Node::maximum_level = 2;
-
 //////////////////// NODE ///////////////////////
+
+Node::Node( const SConfig& conf )
+    :Node(NULL,NULL)
+{
+    // Level, index, left and bottom are already initialized correctly.
+    top = conf.dsize; right = conf.dsize;
+}
+
+Node::Node( Node* parent, Particle* part )
+    :parent_(parent), children_{NULL,NULL,NULL,NULL}, level_(0), index_(0), com_(part), left(0.0), right(0.0), top(0.0), bottom(0.0)
+{
+    // If parent exists, we can infer some properties (such as index, level,
+    // boundaries) to the current node.
+    if(parent_!=NULL) {
+        level_ = parent_->level_++;
+        // Find which child we are and compute properties
+        for( unsigned int ic(0); ic<4; ic++ ){
+            if( parent_->children_[ic] == this ){
+                // Shift the node's index by two bits compared to the parent,
+                // then, add local index
+                index_ = (parent_->index_ << 2) + ic;
+                // Check child location relative to parent. Using the Z-curve
+                // structure, if the zeroth bit of ic is one (ic=0,2), the node
+                // is north. If the next bit of ic is one (ic=2,3), the node is
+                // east.
+                bool is_north( ic & 1U );
+                bool is_east( (ic>>1) & 1U );
+                left   = parent_->left   + 0.5*(double)(is_east)  *(parent_->right-parent_->left);
+                right  = parent_->right  - 0.5*(double)(!is_east) *(parent_->right-parent_->left);
+                bottom = parent_->bottom + 0.5*(double)(is_north) *(parent_->top-parent_->bottom);
+                top    = parent_->top    - 0.5*(double)(!is_north)*(parent_->top-parent_->bottom);
+                // We found the node, break iteration
+                break;
+            }
+        }
+    }
+}
 
 /** @brief Creates a generic node.
  * @param[in] parent Pointer to a parent node. If none is provided, the pointer

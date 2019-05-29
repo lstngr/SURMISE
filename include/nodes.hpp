@@ -26,7 +26,7 @@ enum ZDIR {
  */
 class Node {
     public:
-        Node();
+        Node( const SConfig& conf );
         virtual ~Node();
         Node* GetParent() const;
         Node* GetChild(short int child_idx) const;
@@ -42,9 +42,6 @@ class Node {
         bool BelongsTo( Particle *p ) const;
         SError AddParticle( Particle* p);
         SError AddParticle( std::vector<Particle*> p);
-        /** Maximum level of the tree
-        @todo Protect scope, check MPI feasability.*/
-        static unsigned int maximum_level; 
         SError Interact( const Node* other );
         double GetMass() const;
     protected:
@@ -55,8 +52,8 @@ class Node {
         /**Array of pointers to children node. As we work in the two-dimensional
          space, the size is preallocated to a quad-tree structure.*/
         Node *children_[4];
-        long long level_;
-        long long index_;
+        unsigned long long level_;
+        unsigned long long index_;
         Particle* com_;
         /// Geometrical limits of the node's coverage (of physical space)
         long double left,right,top,bottom;
