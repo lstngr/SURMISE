@@ -17,7 +17,7 @@ struct Particle {
     double vel[2]; //!< 2D Velocity of the particle
     double frc[2]; //!< 2D Force acting on the particle
     double mass; //!< Mass of the particle
-    int id; //!< Mass identifier (so we do not mix them during time-evolution).
+    long id; //!< Mass identifier (so we do not mix them during time-evolution).
     std::array<double,2> PForce(const Particle* p) const;
 };
 

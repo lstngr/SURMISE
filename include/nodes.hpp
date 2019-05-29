@@ -26,61 +26,40 @@ enum ZDIR {
  */
 class Node {
     public:
-        Node(Node *parent = NULL, unsigned int idx = 0 );
+        Node();
         virtual ~Node();
         Node* GetParent() const;
         Node* GetChild(short int child_idx) const;
         Node* GetNext() const;
         Node* Move( ZDIR direction ) const;
-        bool IsNN(const Node* other) const;
-        std::array<Node*,8>  GetNN() const;
-        std::array<Node*,27> GetIN() const;
+        bool IsRoot() const;
+        bool IsLeaf() const;
         SError InitChild( int child );
-        SError InitLeaf( int leaf );
-        SError InitAllChildren();
-        SError InitAllLeafs();
-        std::array<double,2> Center() const;
+        std::array<double,2> GetCenterOfMass() const;
         std::array<double,4> GetBounds() const;
-        SError SetBounds(double x1, double x2, double y1, double y2);
-        virtual SError Decompose( std::vector<Particle*>& parts );
-        virtual SError TimeEvolution( double dt );
-        virtual SError TimeEvolutionMasses( double dt );
-        unsigned int GetLevel() const;
-        unsigned int GetIndex() const;
+        long long GetLevel() const;
+        long long GetIndex() const;
         bool BelongsTo( Particle *p ) const;
-        virtual SError Reassign( Particle* p );
-        virtual SError AddParticle( Particle* p);
-        static unsigned int maximum_level; /*!< Maximum level of the tree
-                                    @todo Protect scope, check MPI feasability.*/
+        SError AddParticle( Particle* p);
+        SError AddParticle( std::vector<Particle*> p);
+        /** Maximum level of the tree
+        @todo Protect scope, check MPI feasability.*/
+        static unsigned int maximum_level; 
         SError Interact( const Node* other );
-        virtual SError GatherMasses();
         double GetMass() const;
-        SError SetMass(double m);
-        SError ResetForces();
-        SError AddForce(const std::array<double,2>& upstream_force);
-        std::array<double,2> GetForce() const;
-        /** Returns an empty vector of particles. @todo Ugly AF.*/
-        virtual std::vector<Particle*> GetParticles() const{return std::vector<Particle*>{};}
-        SError SetCOM(const std::array<double,2>& cen);
     protected:
     private:
+        Node(Node *parent, Particle *part);
         /** Pointer to parent Node*/
         Node *parent_;
         /**Array of pointers to children node. As we work in the two-dimensional
          space, the size is preallocated to a quad-tree structure.*/
         Node *children_[4];
-        /** Level of the Node. The RootNode has level 0.*/
-        unsigned int level_;
-        /** Index of the Node within its parent's children subtree. */
-        unsigned int idx_;
+        long long level_;
+        long long index_;
+        Particle* com_;
         /// Geometrical limits of the node's coverage (of physical space)
-        double xybnds[4];
-        /** Total mass of the Node.*/
-        double mass;
-        /**Force applied on the Node's _geometrical_ center.*/
-        std::array<double,2> force;
-        /**Node's center of mass*/
-        std::array<double,2> com;
+        long double left,right,top,bottom;
 };
 
 /** @brief Node at the root of the tree decomposition of the system.
