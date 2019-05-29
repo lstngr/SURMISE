@@ -12,9 +12,14 @@
 
 class IOManager {
     public:
+        IOManager( std::string filename );
+        IOManager( );
+        bool IsReady() const;
     protected:
     private:
-        std::ofstream outstream_;
+        SError OpenStream();
+        SError CloseStream();
+        std::ostream* outstream_;
 };
 
 #endif // SURMISE_IOMANAGER_HPP_
