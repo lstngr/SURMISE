@@ -39,6 +39,7 @@ class Node {
         double GetMass() const;
         bool BelongsTo( Particle *p ) const;
     private:
+        friend class QuadTree;
         Node(Node *parent, Particle *part);
         /** Pointer to parent Node*/
         Node *parent_;

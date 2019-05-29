@@ -960,9 +960,9 @@ SError QuadTree::AddParticle( Particle* p ){
             // return E_SUCCESS;
         }
         for( unsigned ic(0); ic<4; ic++ ) {
-            if( ptr->GetChild(ic) != NULL ) {
-                if( ptr->GetChild(ic)->BelongsTo(p) ) {
-                    ptr = ptr->GetChild(ic);
+            if( ptr->children_[ic] != NULL ) {
+                if( ptr->children_[ic]->BelongsTo(p) ) {
+                    ptr = ptr->children_[ic];
                     break;
                 }
             } else if ( ic==3 ) {
