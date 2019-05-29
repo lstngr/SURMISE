@@ -6,8 +6,18 @@
 #define SURMISE_SROUTINES_HPP_
 
 #include "stypes.hpp"
+#include "nodes.hpp"
 #include "serrors.hpp"
 
-SError RunSimulation( const SConfig& config );
+class Simulation {
+    public:
+        Simulation( SConfig& conf ) :conf_(conf){}
+        ~Simulation();
+        SError Run();
+    private:
+        SConfig conf_;
+        QuadTree* tree_;
+};
+
 
 #endif // SURMISE_SROUTINES_HPP_

@@ -1,7 +1,12 @@
 #include <iostream>
 #include "sroutines.hpp"
 
-SError RunSimulation( const SConfig& config ) {
+Simulation::~Simulation() {
+    if(tree_!=NULL)
+        delete tree_;
+}
+
+SError Simulation::Run() {
     std::cout << "Coucou" << std::endl;
     return E_SUCCESS;
 }

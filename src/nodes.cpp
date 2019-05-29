@@ -106,8 +106,9 @@ Node* Node::GetNext() const {
         return NULL;
     // Node is not last in quad tree decomposition. Parent has a child with
     // higher index (which we return, most common case).
-    if( this->idx_<3 )
-        return this->GetParent()->GetChild( this->idx_ + 1 );
+    unsigned int idx(this->index_%4);
+    if( idx<3 )
+        return this->GetParent()->GetChild( idx + 1 );
     // Else, we need to search the next Node among the parents, get the current
     // node's.
     Node* nxt( this->GetParent() );

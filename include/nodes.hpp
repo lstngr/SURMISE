@@ -30,20 +30,14 @@ class Node {
         virtual ~Node();
         Node* GetParent() const;
         Node* GetChild(short int child_idx) const;
-        Node* GetNext() const;
-        Node* Move( ZDIR direction ) const;
         bool IsRoot() const;
         bool IsLeaf() const;
-        SError InitChild( int child );
         std::array<double,2> GetCenterOfMass() const;
         std::array<double,4> GetBounds() const;
         long long GetLevel() const;
         long long GetIndex() const;
-        bool BelongsTo( Particle *p ) const;
-        SError AddParticle( Particle* p);
-        SError AddParticle( std::vector<Particle*> p);
-        SError Interact( const Node* other );
         double GetMass() const;
+        bool BelongsTo( Particle *p ) const;
     protected:
     private:
         Node(Node *parent, Particle *part);
@@ -57,6 +51,17 @@ class Node {
         Particle* com_;
         /// Geometrical limits of the node's coverage (of physical space)
         long double left,right,top,bottom;
+};
+
+class QuadTree {
+    public:
+        QuadTree( const SConfig& config );
+        ~QuadTree();
+        SError AddParticle( Particle* p );
+        SError AddParticle( std::vector<Particle*> p );
+    protected:
+    private:
+        Node* root_;
 };
 
 /** @brief Node at the root of the tree decomposition of the system.
