@@ -19,6 +19,8 @@ enum ZDIR {
     UP=1, DOWN=-1, LEFT=-2, RIGHT=2
 };
 
+class QuadTree;
+
 /** @class Node
  * @brief Generic Node in the decomposition tree.
  * @details It contains information about its parent domain, children, and has
@@ -41,9 +43,10 @@ class Node {
         bool BelongsTo( Particle *p ) const;
         unsigned GetQuadrant( Particle* p ) const;
         unsigned GetQuadrant( Node* n ) const;
-        friend std::ostream& operator<<( std::ostream& os, const Node& node );
-    private:
         friend class QuadTree;
+        friend std::ostream& operator<<( std::ostream& os, const Node& node );
+        friend std::ostream& operator<<( std::ostream& os, const QuadTree& tree );
+    private:
         Node(Node *parent, Particle *part);
         /** Pointer to parent Node*/
         Node *parent_;

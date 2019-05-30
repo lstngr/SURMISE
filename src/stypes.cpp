@@ -43,3 +43,9 @@ Particle& Particle::operator+=( const Particle& other ) {
     this->mass = total_mass;
     return *this;
 }
+
+std::ostream& operator<<( std::ostream& os, const Particle& p ) {
+    os << "[PART " << &p << "] ID=" << p.id << "/MASS=" << p.mass << " POS=(" << p.pos[0] << "," << p.pos[1] << ")";
+    return os;
+}
+

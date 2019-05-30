@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <iostream>
 
 /** Describes a particle in space. Contains relevant informations to
  * itself (position, velocity, mass) as well as flags set by the domain classes.
@@ -24,6 +25,7 @@ struct Particle {
     Particle& operator+=( const Particle& other );
 };
 Particle operator+( Particle lhs, const Particle& rhs );
+std::ostream& operator<<( std::ostream& os, const Particle& p );
 
 /** @brief Structure containing the simulation parameters.
  * @details Will be read by the root MPI process and passed to other instances

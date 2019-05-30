@@ -149,7 +149,7 @@ std::ostream& operator<<( std::ostream& os, const Node& node ) {
         << ") CHILD=( ";
     for( unsigned ic(0); ic<4; ic++ )
         os << node.children_[ic] << " ";
-    os << ") PART=" << node.com_;
+    os << ")";
     return os;
 }
 
@@ -230,12 +230,16 @@ SError QuadTree::AddParticle( Particle* p ){
         if( ptr->children_[ic] == NULL ) {
             // The current node is not a leaf, but the quadrant we want to
             // insert the particle in is free, so we do it right away.
+            // Increment the parent node with the mass of its new child.
+            *(ptr->com_) += *p;
             ptr->children_[ic] = new Node( ptr, p );
             break;
         } else {
             // The current node is not a leaf, and the quadrant we need to
             // insert the particle in is already occupied. Move the pointer down
             // one level.
+            // Increment the parent node with the mass of its new child.
+            *(ptr->com_) += *p;
             ptr = ptr->children_[ic];
         }
     }
@@ -251,14 +255,16 @@ SError QuadTree::AddParticle( std::vector<Particle*> p ) {
 std::ostream& operator<<( std::ostream& os, const QuadTree& tree ) {
     os << "[TREE " << &tree << "] root_=" << tree.root_ << std::endl;
     Node* ptr(tree.root_);
-    os << "    " << *ptr << std::endl;
+    os << "    " << *ptr << std::endl
+       << "          " << *(ptr->com_) << std::endl;
     while(true) {
         // Goes as deep as it can, prints all nodes when stepping down.
         if( not ptr->IsLeaf() ) {
             for( unsigned ic(0); ic<4; ic++ ) {
                 if( ptr->GetChild(ic) != NULL ) {
                     ptr = ptr->GetChild(ic);
-                    os << "    " << *ptr << std::endl;
+                    os << "    " << *ptr << std::endl
+                       << "          " << *(ptr->com_) << std::endl;
                     break;
                 }
             }
@@ -278,7 +284,8 @@ std::ostream& operator<<( std::ostream& os, const QuadTree& tree ) {
                     if( ptr->GetChild(ic) != NULL ){
                         // Found a child from parent
                         ptr = ptr->GetChild(ic);
-                        os << "    " << *ptr << std::endl;
+                        os << "    " << *ptr << std::endl
+                           << "          " << *(ptr->com_) << std::endl;
                         go_up = false;
                         break;
                     }
