@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <bitset>
 #include "nodes.hpp"
 
 //////////////////// NODE ///////////////////////
@@ -75,62 +76,6 @@ bool Node::IsLeaf() const {
     return true;
 }
 
-/** @brief Finds the non-empty Node on the same level.
- * @details During the domain decomposition, initiated by the
- * RootNode::Decomposition method, we recursively generated quad-tree decomposed
- * subdomains, each associated with a Node located at a lower level of
- * refinement. @n
- * Some procedures within the SURMISE code require browsing all the Node objects
- * from a specific level (for example, when building the first multipoles at the
- * LeafNode level). A method navigating through all these nodes sequentially is
- * thus needed, this is the aim of the current function. @n
- * When a Node calls GetNext, the parent Node is inspected, and children with a
- * higher index are looked for and returned. If the current node has index 3,
- * no antecedant node on the same level, and contained in the same quad-tree
- * subdomain exist. A recursive search is then launched and navigates up the
- * tree diagram until a larger, neighboring subdomain with greater index than
- * the current one is found. This subdomain is entered and explored until a Node
- * matching the caller's level is found, which the method returns. @n
- * Node::GetNext returns NULL when the recursion tries to look for the
- * RootNode's parent, indicating no Node with greater index can be found.
- * @returns A pointer to the next Node found on the same level.
- */
-Node* QuadTree::GetNext( Node* ptr ) const {
-    // If we're at the Root, we want to return immediately.
-    if( ptr->level_ == 0 )
-        return NULL;
-    // Node is not last in quad tree decomposition. Parent has a child with
-    // higher index (which we return, most common case).
-    unsigned int idx(ptr->index_%4);
-    if( idx<3 )
-        return ptr->GetParent()->GetChild( idx + 1 );
-    // Else, we need to search the next Node among the parents, get the current
-    // node's.
-    Node* nxt( ptr->GetParent() );
-    // We stepped a level higher. Make sure we return the next node on the same
-    // level.
-    while( true ) {
-        // If reached RootNode, return NULL; we come from the last child of this
-        // RootNode and cannot look further.
-        if( nxt->GetLevel() == 0)
-            return NULL;
-        // This node's parent contains more interesting children, select the
-        // next one (horizontal move in the tree).
-        if( nxt->GetIndex() < 3) {
-            nxt = nxt->GetParent()->GetChild( nxt->GetIndex() + 1 );
-            // We are in a new branch, follow the first child until we're back
-            // at the starting level.
-            while( nxt->GetLevel() != ptr->level_ )
-                nxt = nxt->GetChild( 0 );
-            return nxt;
-        }
-        // If this statement is reached, this means the investigated parent is
-        // also the last child of the "upper" level, we need to search higher up
-        // the tree.
-        nxt = nxt->GetParent();
-    }
-}
-
 /** @brief Computes the geometrical center of the calling node from its
  * boundaries.
  */
@@ -183,8 +128,16 @@ unsigned Node::GetQuadrant( Particle* p ) const {
     return idx;
 }
 
+unsigned Node::GetQuadrant( Node* n ) const {
+    Particle tmp;
+    tmp.pos = {0.5*(n->left_+n->right_), 0.5*(n->bottom_+n->top_)};
+    return GetQuadrant( &tmp );
+}
+
 std::ostream& operator<<( std::ostream& os, const Node& node ) {
-    os << "[NODE " << &node << "] LVL=" << node.level_ << "/IDX=" << node.index_
+    os  << "[NODE " << &node << "] LVL=" << node.level_
+        // << "/IDX=" << std::bitset<8*sizeof(long long)>(node.index_)
+        << "/IDX=" << node.index_
         << " (L,R,B,T)=(" << node.left_ << "," << node.right_ << ","
         << node.bottom_ << "," << node.top_
         << ") CHILD=( ";
@@ -204,6 +157,42 @@ QuadTree::~QuadTree() {
     if( root_ != NULL ) {
         delete root_;
         root_ = NULL;
+    }
+}
+
+Node* QuadTree::GetNext( Node* ptr ) const {
+    // If we're at the Root, we want to return immediately.
+    if( ptr->level_ == 0 )
+        return NULL;
+    // Node is not last in quad tree decomposition. Parent has a child with
+    // higher index (which we return, most common case).
+    unsigned int idx(ptr->index_%4);
+    if( idx<3 )
+        return ptr->GetParent()->GetChild( idx + 1 );
+    // Else, we need to search the next Node among the parents, get the current
+    // node's.
+    Node* nxt( ptr->GetParent() );
+    // We stepped a level higher. Make sure we return the next node on the same
+    // level.
+    while( true ) {
+        // If reached RootNode, return NULL; we come from the last child of this
+        // RootNode and cannot look further.
+        if( nxt->GetLevel() == 0)
+            return NULL;
+        // This node's parent contains more interesting children, select the
+        // next one (horizontal move in the tree).
+        if( nxt->GetIndex() < 3) {
+            nxt = nxt->GetParent()->GetChild( nxt->GetIndex() + 1 );
+            // We are in a new branch, follow the first child until we're back
+            // at the starting level.
+            while( nxt->GetLevel() != ptr->level_ )
+                nxt = nxt->GetChild( 0 );
+            return nxt;
+        }
+        // If this statement is reached, this means the investigated parent is
+        // also the last child of the "upper" level, we need to search higher up
+        // the tree.
+        nxt = nxt->GetParent();
     }
 }
 
@@ -252,6 +241,45 @@ SError QuadTree::AddParticle( std::vector<Particle*> p ) {
 }
 
 std::ostream& operator<<( std::ostream& os, const QuadTree& tree ) {
-    os << "[TREE " << &tree << "] root_=" << tree.root_;
+    os << "[TREE " << &tree << "] root_=" << tree.root_ << std::endl;
+    Node* ptr(tree.root_);
+    os << "    " << *ptr << std::endl;
+    while(true) {
+        // Goes as deep as it can, prints all nodes when stepping down.
+        if( not ptr->IsLeaf() ) {
+            for( unsigned ic(0); ic<4; ic++ ) {
+                if( ptr->GetChild(ic) != NULL ) {
+                    ptr = ptr->GetChild(ic);
+                    os << "    " << *ptr << std::endl;
+                    break;
+                }
+            }
+        } else {
+            // We reached a leaf. Need to go up until we can move again.
+            bool go_up(true);
+            while(go_up){
+                // If we're at the root, cannot climb
+                if(ptr->IsRoot()){
+                    return os;
+                }
+                // Else get the parent.
+                // Figure out our index from parent
+                unsigned icur(ptr->GetParent()->GetQuadrant(ptr));
+                ptr = ptr->GetParent();
+                for( unsigned ic(icur+1); ic<4; ic++ ) {
+                    if( ptr->GetChild(ic) != NULL ){
+                        // Found a child from parent
+                        ptr = ptr->GetChild(ic);
+                        os << "    " << *ptr << std::endl;
+                        go_up = false;
+                        break;
+                    }
+                }
+                // Here, we're about to redo the while.
+                // If go_up = false, we found a child to go to.
+                // Else, the routine restarts and goes up one other level.
+            }
+        }
+    }
     return os;
 }

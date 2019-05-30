@@ -40,6 +40,7 @@ class Node {
         double GetMass() const;
         bool BelongsTo( Particle *p ) const;
         unsigned GetQuadrant( Particle* p ) const;
+        unsigned GetQuadrant( Node* n ) const;
         friend std::ostream& operator<<( std::ostream& os, const Node& node );
     private:
         friend class QuadTree;
