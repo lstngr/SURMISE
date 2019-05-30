@@ -10,16 +10,18 @@
 #include "serrors.hpp"
 #include "stypes.hpp"
 
+class Simulation;
+
 class IOManager {
     public:
-        IOManager( std::string filename );
-        IOManager( );
-        bool IsReady() const;
-    protected:
+        IOManager( std::string input_path );
+        SError WriteOutput( const Simulation& sim, unsigned it );
+        const SConfig& GetConfig() const;
     private:
-        SError OpenStream();
-        SError CloseStream();
-        std::ostream* outstream_;
+        SError GenerateConfig( const std::string& cfile, const std::string& ifile );
+        SError OpenStream( std::ofstream& ofstrm, const std::string& ofile ) const;
+        SError CloseStream( std::ofstream* ptr ) const;
+        SConfig conf_;
 };
 
 #endif // SURMISE_IOMANAGER_HPP_
