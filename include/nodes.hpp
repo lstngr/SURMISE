@@ -63,47 +63,4 @@ class QuadTree {
         Node* root_;
 };
 
-/** @brief Node at the root of the tree decomposition of the system.
- * @details This object is instanciated at the start of the simulation and
- * contains various methods to manage, run and export the simulation. It
- * represents the interface called from the main function.
- */
-class RootNode : public Node {
-    public:
-        RootNode(SConfig& conf);
-        SError Run();
-        SError Decompose( std::vector<Particle*>& parts ) override;
-        SError TimeEvolution( double dt ) override;
-        SError Reassign( Particle* p ) override;
-    protected:
-    private:
-        /** Configuration of the simulation. We note it contains the relevant
-         * algorithmic parameters, but also the Particle's to be simulated.*/
-        SConfig &conf_;
-};
-
-/** @class LeafNode
- * @brief Node located at the bottom of the tree.
- * @details It handles the concrete evolution and computation of the system,
- * namely since it handles the Particle objects directly (direct force
- * summation, lowest level FMM, time evolution).
- */
-class LeafNode : public Node {
-    public:
-        LeafNode( Node *parent, unsigned int child );
-        LeafNode( Node *parent, unsigned int child, std::vector<Particle*> &parts );
-        SError Decompose( std::vector<Particle*>& parts ) override;
-        SError TimeEvolution( double dt ) override;
-        SError TimeEvolutionMasses( double dt ) override;
-        SError Reassign( Particle* p ) override;
-        SError AddParticle( Particle* p) override;
-        SError GatherMasses() override;
-        std::vector<Particle*> GetParticles() const override;
-    protected:
-    private:
-        /** Stores the Particle located in the node. They can be used for direct
-         * or nearest-neighbours computation.*/
-        std::vector<Particle*> subparts_;
-};
-
 #endif //SURMISE_NODES_HPP_
