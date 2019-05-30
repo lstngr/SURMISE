@@ -189,10 +189,7 @@ Node* QuadTree::GetNext( Node* ptr ) const {
         // next one (horizontal move in the tree).
         if( nxt->GetIndex() < 3) {
             nxt = nxt->GetParent()->GetChild( nxt->GetIndex() + 1 );
-            // We are in a new branch, follow the first child until we're back
-            // at the starting level.
-            while( nxt->GetLevel() != ptr->level_ )
-                nxt = nxt->GetChild( 0 );
+            // We're happy at a higher level than before, return.
             return nxt;
         }
         // If this statement is reached, this means the investigated parent is
@@ -200,6 +197,17 @@ Node* QuadTree::GetNext( Node* ptr ) const {
         // the tree.
         nxt = nxt->GetParent();
     }
+}
+
+Node* QuadTree::GetDown( Node* ptr ) const {
+    // Follow first child available
+    for( unsigned ic(0); ic<4; ic++ ) {
+        if( ptr->children_[ic] != NULL ) {
+            ptr = ptr->children_[ic];
+            break;
+        }
+    }
+    return ptr;
 }
 
 Node* QuadTree::GetNextLeaf( Node* ptr ) const {
