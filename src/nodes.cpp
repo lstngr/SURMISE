@@ -202,6 +202,50 @@ Node* QuadTree::GetNext( Node* ptr ) const {
     }
 }
 
+Node* QuadTree::GetNextLeaf( Node* ptr ) const {
+    if(ptr==NULL){
+        return NULL;
+    }
+    Node* nxt(ptr);
+    do{
+        // Goes as deep as it can.
+        if( not nxt->IsLeaf() ) {
+            for( unsigned ic(0); ic<4; ic++ ) {
+                if( nxt->GetChild(ic) != NULL ) {
+                    nxt = nxt->GetChild(ic);
+                    break;
+                }
+            }
+        } else {
+            // We reached a leaf. Need to go up until we can move again.
+            bool go_up(true);
+            while(go_up){
+                // If we're at the root, cannot climb
+                if(nxt->IsRoot()){
+                    return NULL;
+                }
+                // Else get the parent.
+                // Figure out our index from parent
+                unsigned icur(nxt->GetParent()->GetQuadrant(nxt));
+                nxt = nxt->GetParent();
+                for( unsigned ic(icur+1); ic<4; ic++ ) {
+                    if( nxt->GetChild(ic) != NULL ){
+                        // Found a child from parent
+                        nxt = nxt->GetChild(ic);
+                        go_up = false;
+                        break;
+                    }
+                }
+                // Here, we're about to redo the while.
+                // If go_up = false, we found a child to go to.
+                // Else, the routine restarts and goes up one other level.
+            }
+        }
+        // We only exit the routine if the candidate node is a leaf.
+    }while(not nxt->IsLeaf());
+    return nxt;
+}
+
 SError QuadTree::AddParticle( Particle* p ){
     Node* ptr(this->root_);
     while(true) {
