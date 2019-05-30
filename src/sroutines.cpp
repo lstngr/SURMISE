@@ -2,18 +2,20 @@
 #include "sroutines.hpp"
 
 Simulation::~Simulation() {
-    if(tree_!=NULL)
+    if(tree_!=NULL) {
         delete tree_;
+        tree_ = NULL;
+    }
 }
 
 SError Simulation::Run() {
     std::cout << "SURMISE run begins." << std::endl;
     BuildTree();
-    for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
-        ComputeForces();
-        TimeEvolution();
-        UpdateTree();
-    }
+    // for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
+    //     ComputeForces();
+    //     TimeEvolution();
+    //     UpdateTree();
+    // }
     return E_SUCCESS;
 }
 

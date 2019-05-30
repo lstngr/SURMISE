@@ -19,27 +19,23 @@ Node::Node( Node* parent, Particle* part )
     // If parent exists, we can infer some properties (such as index, level,
     // boundaries) to the current node.
     if(parent_!=NULL) {
-        level_ = parent_->level_++;
+        level_ = parent_->level_+1;
         // Find which child we are and compute properties
-        for( unsigned int ic(0); ic<4; ic++ ){
-            if( parent_->children_[ic] == this ){
-                // Shift the node's index by two bits compared to the parent,
-                // then, add local index
-                index_ = (parent_->index_ << 2) + ic;
-                // Check child location relative to parent. Using the Z-curve
-                // structure, if the zeroth bit of ic is one (ic=0,2), the node
-                // is north. If the next bit of ic is one (ic=2,3), the node is
-                // east.
-                bool is_north( ic & 1U );
-                bool is_east( (ic>>1) & 1U );
-                left_   = parent_->left_   + 0.5*(double)(is_east)  *(parent_->right_-parent_->left_);
-                right_  = parent_->right_  - 0.5*(double)(!is_east) *(parent_->right_-parent_->left_);
-                bottom_ = parent_->bottom_ + 0.5*(double)(is_north) *(parent_->top_-parent_->bottom_);
-                top_    = parent_->top_    - 0.5*(double)(!is_north)*(parent_->top_-parent_->bottom_);
-                // We found the node, break iteration
-                break;
-            }
-        }
+        unsigned ic( parent_->GetQuadrant( part ) );
+        // Shift the node's index by two bits compared to the parent,
+        // then, add local index
+        index_ = (parent_->index_ << 2) + ic;
+        // Check child location relative to parent. Using the Z-curve
+        // structure, if the zeroth bit of ic is one (ic=0,2), the node
+        // is north. If the next bit of ic is one (ic=2,3), the node is
+        // east.
+        bool is_north( ic & 1U );
+        bool is_east( (ic>>1) & 1U );
+        left_   = parent_->left_   + 0.5*(double)(is_east)  *(parent_->right_-parent_->left_);
+        right_  = parent_->right_  - 0.5*(double)(!is_east) *(parent_->right_-parent_->left_);
+        bottom_ = parent_->bottom_ + 0.5*(double)(is_north) *(parent_->top_-parent_->bottom_);
+        top_    = parent_->top_    - 0.5*(double)(!is_north)*(parent_->top_-parent_->bottom_);
+        // We found the node, break iteration
     }
 }
 
@@ -47,9 +43,10 @@ Node::Node( Node* parent, Particle* part )
  * @details Moooar
  */
 Node::~Node() {
-    for( size_t ic(0); ic<4; ic++) {
+    for( unsigned ic(0); ic<4; ic++) {
         if( this->children_[ic] != NULL ) {
             delete this->children_[ic];
+            this->children_[ic] = NULL;
         }
     }
 }
@@ -193,8 +190,10 @@ QuadTree::QuadTree( const SConfig& config )
 {}
 
 QuadTree::~QuadTree() {
-    if( root_ != NULL )
+    if( root_ != NULL ) {
         delete root_;
+        root_ = NULL;
+    }
 }
 
 SError QuadTree::AddParticle( Particle* p ){
@@ -202,12 +201,29 @@ SError QuadTree::AddParticle( Particle* p ){
     while(true) {
         unsigned ic( ptr->GetQuadrant( p ) );
         if( ptr->IsLeaf() ) {
+            // First off, check we're not at the Root (could mean tree is
+            // empty!)
+            if( ptr->com_ == NULL ) {
+                ptr->com_ = p;
+                break;
+            }
             // We can insert right away, but we need also need to shift the
             // previous node down at the leaf level (else we lose a particle).
+            // Problem:
+            // The current particle, which needs to be shift down,
+            // could end in the same level as the particle we're trying to
+            // assign!
+            // Solution:
+            // Move the current node down, and let one more iteration run, so
+            // another if statement is executed.
+            unsigned in( ptr->GetQuadrant( ptr->com_ ) );
+            ptr->children_[in] = new Node( ptr, ptr->com_ );
         }
         if( ptr->children_[ic] == NULL ) {
             // The current node is not a leaf, but the quadrant we want to
             // insert the particle in is free, so we do it right away.
+            ptr->children_[ic] = new Node( ptr, p );
+            break;
         } else {
             // The current node is not a leaf, and the quadrant we need to
             // insert the particle in is already occupied. Move the pointer down

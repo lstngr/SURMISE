@@ -11,7 +11,7 @@
 
 class Simulation {
     public:
-        Simulation( SConfig& conf ) :conf_(conf){}
+        Simulation( const SConfig& conf ) :conf_(conf){}
         ~Simulation();
         SError Run();
     private:
@@ -19,7 +19,7 @@ class Simulation {
         SError UpdateTree();
         SError ComputeForces();
         SError TimeEvolution();
-        SConfig conf_;
+        const SConfig& conf_;
         QuadTree* tree_;
 };
 
