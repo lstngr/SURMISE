@@ -39,6 +39,7 @@ class Node {
         std::array<double,4> GetBounds() const;
         long long GetLevel() const;
         long long GetIndex() const;
+        double GetWidth() const;
         double GetMass() const;
         bool BelongsTo( Particle *p ) const;
         unsigned GetQuadrant( Particle* p ) const;
@@ -59,6 +60,8 @@ class Node {
         /// Geometrical limits of the node's coverage (of physical space)
         double left_,right_,top_,bottom_;
 };
+
+double distance( const Node& n1, const Node& n2 );
 
 class QuadTree {
     public:

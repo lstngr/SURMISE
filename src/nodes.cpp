@@ -110,6 +110,10 @@ long long Node::GetLevel() const { return level_; }
  */
 long long Node::GetIndex() const { return index_; }
 
+double Node::GetWidth() const {
+    return right_ - left_;
+}
+
 /** @brief Returns true if the argmuent Particle is in the domain
  * @details Many more things
  * @param[in] p Pointer to a Particle object.
@@ -151,6 +155,12 @@ std::ostream& operator<<( std::ostream& os, const Node& node ) {
         os << node.children_[ic] << " ";
     os << ")";
     return os;
+}
+
+double distance( const Node& n1, const Node& n2 ) {
+    const std::array<double,2>& pos1( n1.GetCenterOfMass() );
+    const std::array<double,2>& pos2( n1.GetCenterOfMass() );
+    return std::sqrt( ( pos1[0]-pos2[0] )*( pos1[0]-pos2[0] ) + ( pos1[1]-pos2[1] )*( pos1[1]-pos2[1] ) );
 }
 
 /* ------------------------------------------- */
