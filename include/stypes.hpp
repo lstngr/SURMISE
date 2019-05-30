@@ -13,9 +13,9 @@
  * itself (position, velocity, mass) as well as flags set by the domain classes.
  */
 struct Particle {
-    double pos[2]; //!< 2D Position of the particle
-    double vel[2]; //!< 2D Velocity of the particle
-    double frc[2]; //!< 2D Force acting on the particle
+    std::array<double,2> pos; //!< 2D Position of the particle
+    std::array<double,2> vel; //!< 2D Velocity of the particle
+    std::array<double,2> frc; //!< 2D Force acting on the particle
     double mass; //!< Mass of the particle
     long id; //!< Mass identifier (so we do not mix them during time-evolution).
     Particle& operator+=( const Particle& other );

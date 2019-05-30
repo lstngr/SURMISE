@@ -38,6 +38,7 @@ class Node {
         long long GetIndex() const;
         double GetMass() const;
         bool BelongsTo( Particle *p ) const;
+        unsigned GetQuadrant( Particle* p ) const;
     private:
         friend class QuadTree;
         Node(Node *parent, Particle *part);
@@ -50,13 +51,14 @@ class Node {
         unsigned long long index_;
         Particle* com_;
         /// Geometrical limits of the node's coverage (of physical space)
-        long double left_,right_,top_,bottom_;
+        double left_,right_,top_,bottom_;
 };
 
 class QuadTree {
     public:
         QuadTree( const SConfig& config );
         ~QuadTree();
+        Node* GetNext( Node* ptr ) const;
         SError AddParticle( Particle* p );
         SError AddParticle( std::vector<Particle*> p );
     private:

@@ -67,6 +67,17 @@ Node* Node::GetChild( short int child_idx ) const {
     return children_[child_idx];
 }
 
+bool Node::IsRoot() const {
+    return level_==0;
+}
+
+bool Node::IsLeaf() const {
+    for( auto child : children_ )
+        if( child != NULL )
+            return false;
+    return true;
+}
+
 /** @brief Finds the non-empty Node on the same level.
  * @details During the domain decomposition, initiated by the
  * RootNode::Decomposition method, we recursively generated quad-tree decomposed
@@ -87,18 +98,18 @@ Node* Node::GetChild( short int child_idx ) const {
  * RootNode's parent, indicating no Node with greater index can be found.
  * @returns A pointer to the next Node found on the same level.
  */
-Node* Node::GetNext() const {
+Node* QuadTree::GetNext( Node* ptr ) const {
     // If we're at the Root, we want to return immediately.
-    if( this->level_ == 0 )
+    if( ptr->level_ == 0 )
         return NULL;
     // Node is not last in quad tree decomposition. Parent has a child with
     // higher index (which we return, most common case).
-    unsigned int idx(this->index_%4);
+    unsigned int idx(ptr->index_%4);
     if( idx<3 )
-        return this->GetParent()->GetChild( idx + 1 );
+        return ptr->GetParent()->GetChild( idx + 1 );
     // Else, we need to search the next Node among the parents, get the current
     // node's.
-    Node* nxt( this->GetParent() );
+    Node* nxt( ptr->GetParent() );
     // We stepped a level higher. Make sure we return the next node on the same
     // level.
     while( true ) {
@@ -112,7 +123,7 @@ Node* Node::GetNext() const {
             nxt = nxt->GetParent()->GetChild( nxt->GetIndex() + 1 );
             // We are in a new branch, follow the first child until we're back
             // at the starting level.
-            while( nxt->GetLevel() != this->level_ )
+            while( nxt->GetLevel() != ptr->level_ )
                 nxt = nxt->GetChild( 0 );
             return nxt;
         }
@@ -126,10 +137,8 @@ Node* Node::GetNext() const {
 /** @brief Computes the geometrical center of the calling node from its
  * boundaries.
  */
-std::array<double,2> Node::Center() const {
-    return this->com;
-    /*return std::array<double,2>{(double)0.5*(this->xybnds[0]+this->xybnds[1]),
-    (double)0.5*(this->xybnds[2]+this->xybnds[3])};*/
+std::array<double,2> Node::GetCenterOfMass() const {
+    return this->com_->pos;
 }
 
 /** @brief Returns an array containing the node's geometrical bounds.
@@ -160,8 +169,8 @@ long long Node::GetIndex() const { return index_; }
  */
 bool Node::BelongsTo( Particle *p ) const {
     double xp(p->pos[0]); double yp(p->pos[1]);
-    if( xp > this->xybnds[0] && xp < this->xybnds[1] &&
-            yp > this->xybnds[2] && yp < this->xybnds[3] )
+    if( xp > this->left_ && xp < this->right_ &&
+            yp > this->bottom_ && yp < this->top_ )
         return true;
     return false;
 }
@@ -190,23 +199,21 @@ QuadTree::~QuadTree() {
 
 SError QuadTree::AddParticle( Particle* p ){
     Node* ptr(this->root_);
-    while(true){
+    while(true) {
+        unsigned ic( ptr->GetQuadrant( p ) );
         if( ptr->IsLeaf() ) {
-            // Insert and
-            // return E_SUCCESS;
+            // We can insert right away, but we need also need to shift the
+            // previous node down at the leaf level (else we lose a particle).
         }
-        for( unsigned ic(0); ic<4; ic++ ) {
-            if( ptr->children_[ic] != NULL ) {
-                if( ptr->children_[ic]->BelongsTo(p) ) {
-                    ptr = ptr->children_[ic];
-                    break;
-                }
-            } else if ( ic==3 ) {
-                // The node we need is not initialized
-                // Create it, assign particle, exit
-            }
+        if( ptr->children_[ic] == NULL ) {
+            // The current node is not a leaf, but the quadrant we want to
+            // insert the particle in is free, so we do it right away.
+        } else {
+            // The current node is not a leaf, and the quadrant we need to
+            // insert the particle in is already occupied. Move the pointer down
+            // one level.
+            ptr = ptr->children_[ic];
         }
-
     }
     return E_SUCCESS;
 }
