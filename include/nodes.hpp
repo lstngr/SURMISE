@@ -44,6 +44,9 @@ class Node {
         bool BelongsTo( Particle *p ) const;
         unsigned GetQuadrant( Particle* p ) const;
         unsigned GetQuadrant( Node* n ) const;
+        double GetForce( unsigned dim ) const;
+        SError ResetForces() const;
+        SError Interact( const Node& other ) const;
         friend class QuadTree;
         friend std::ostream& operator<<( std::ostream& os, const Node& node );
         friend std::ostream& operator<<( std::ostream& os, const QuadTree& tree );

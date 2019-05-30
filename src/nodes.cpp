@@ -144,6 +144,24 @@ unsigned Node::GetQuadrant( Node* n ) const {
     return GetQuadrant( &tmp );
 }
 
+double Node::GetForce( unsigned dim ) const {
+    /// @todo Delete this fucking mess.
+    return com_->frc[dim];
+}
+
+SError Node::ResetForces() const {
+    com_->frc[0] = 0.0;
+    com_->frc[1] = 0.0;
+    return E_SUCCESS;
+}
+
+SError Node::Interact( const Node& other ) const {
+    std::array<double,2> afrc = pp_force( *(this->com_), *(other.com_) );
+    this->com_->frc[0] += afrc[0];
+    this->com_->frc[1] += afrc[1];
+    return E_SUCCESS;
+}
+
 std::ostream& operator<<( std::ostream& os, const Node& node ) {
     os  << "[NODE " << &node << "] LVL=" << node.level_
         // << "/IDX=" << std::bitset<8*sizeof(long long)>(node.index_)

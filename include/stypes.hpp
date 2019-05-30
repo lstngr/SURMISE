@@ -26,6 +26,7 @@ struct Particle {
 };
 Particle operator+( Particle lhs, const Particle& rhs );
 std::ostream& operator<<( std::ostream& os, const Particle& p );
+std::array<double,2> pp_force( const Particle& p1, const Particle& p2 );
 
 /** @brief Structure containing the simulation parameters.
  * @details Will be read by the root MPI process and passed to other instances
