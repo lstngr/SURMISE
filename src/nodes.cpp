@@ -246,7 +246,7 @@ Node* QuadTree::GetNextLeaf( Node* ptr ) const {
     return nxt;
 }
 
-SError QuadTree::AddParticle( Particle* p ){
+SError QuadTree::AddParticle( Particle* p ) const {
     Node* ptr(this->root_);
     while(true) {
         unsigned ic( ptr->GetQuadrant( p ) );
@@ -290,7 +290,7 @@ SError QuadTree::AddParticle( Particle* p ){
     return E_SUCCESS;
 }
 
-SError QuadTree::AddParticle( std::vector<Particle*> p ) {
+SError QuadTree::AddParticle( std::vector<Particle*> p ) const {
     for( auto ap : p )
         this->AddParticle( ap );
     return E_SUCCESS;

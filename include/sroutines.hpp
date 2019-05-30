@@ -16,9 +16,9 @@ class Simulation {
         SError Run();
     private:
         SError BuildTree();
-        SError UpdateTree();
-        SError ComputeForces();
-        SError TimeEvolution();
+        SError UpdateTree() const;
+        SError ComputeForces() const;
+        SError TimeEvolution() const;
         const SConfig& conf_;
         QuadTree* tree_;
 };
