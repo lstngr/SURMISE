@@ -49,6 +49,12 @@ Node::~Node() {
             delete this->children_[ic];
             this->children_[ic] = NULL;
         }
+        if( com_ != NULL ) {
+            if( com_->id == -1 ){
+                delete com_;
+                com_ = NULL;
+            }
+        }
     }
 }
 
@@ -143,7 +149,7 @@ std::ostream& operator<<( std::ostream& os, const Node& node ) {
         << ") CHILD=( ";
     for( unsigned ic(0); ic<4; ic++ )
         os << node.children_[ic] << " ";
-    os << ")";
+    os << ") PART=" << node.com_;
     return os;
 }
 
@@ -215,9 +221,11 @@ SError QuadTree::AddParticle( Particle* p ){
             // assign!
             // Solution:
             // Move the current node down, and let one more iteration run, so
-            // another if statement is executed.
+            // another if statement is executed. The current node is replaced by
+            // a fictious one.
             unsigned in( ptr->GetQuadrant( ptr->com_ ) );
             ptr->children_[in] = new Node( ptr, ptr->com_ );
+            ptr->com_ = new Particle(*(ptr->com_));
         }
         if( ptr->children_[ic] == NULL ) {
             // The current node is not a leaf, but the quadrant we want to

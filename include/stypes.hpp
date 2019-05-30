@@ -18,6 +18,9 @@ struct Particle {
     std::array<double,2> frc; //!< 2D Force acting on the particle
     double mass; //!< Mass of the particle
     long id; //!< Mass identifier (so we do not mix them during time-evolution).
+    Particle(){}
+    Particle( const Particle& other );
+    Particle& operator=( const Particle& rhs );
     Particle& operator+=( const Particle& other );
 };
 Particle operator+( Particle lhs, const Particle& rhs );

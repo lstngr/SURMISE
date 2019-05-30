@@ -14,6 +14,24 @@ SConfig::~SConfig() {
     destroy_vector(this->parts);
 }
 
+Particle::Particle( const Particle& other )
+    :Particle()
+{
+    *this = other;
+}
+
+Particle& Particle::operator=( const Particle& rhs ) {
+    this->pos = rhs.pos;
+    this->vel = rhs.vel;
+    this->frc = rhs.frc;
+    this->mass= rhs.mass;
+    // The mass we want to simulate should remain unique in memory. Without
+    // explicit instructions, the index is set to -1 to flag that this mass is
+    // fictious (i.e. may be assigned to a non-leaf node inside the tree)
+    this->id  = -1;
+    return *this;
+}
+
 Particle& Particle::operator+=( const Particle& other ) {
     double total_mass( this->mass + other.mass );
     this->pos[0] = ( this->mass * this->pos[0] + other.mass * this->pos[0] ) / total_mass;
