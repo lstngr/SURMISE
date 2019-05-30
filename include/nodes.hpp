@@ -7,6 +7,7 @@
 
 #include <array>
 #include <vector>
+#include <iostream>
 #include "stypes.hpp"
 #include "serrors.hpp"
 
@@ -39,6 +40,7 @@ class Node {
         double GetMass() const;
         bool BelongsTo( Particle *p ) const;
         unsigned GetQuadrant( Particle* p ) const;
+        friend std::ostream& operator<<( std::ostream& os, const Node& node );
     private:
         friend class QuadTree;
         Node(Node *parent, Particle *part);
@@ -61,6 +63,7 @@ class QuadTree {
         Node* GetNext( Node* ptr ) const;
         SError AddParticle( Particle* p );
         SError AddParticle( std::vector<Particle*> p );
+        friend std::ostream& operator<<( std::ostream& os, const QuadTree& tree );
     private:
         Node* root_;
 };

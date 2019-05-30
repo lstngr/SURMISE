@@ -11,6 +11,7 @@ Simulation::~Simulation() {
 SError Simulation::Run() {
     std::cout << "SURMISE run begins." << std::endl;
     BuildTree();
+    std::cout << *tree_ << std::endl;
     // for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
     //     ComputeForces();
     //     TimeEvolution();

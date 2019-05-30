@@ -183,6 +183,17 @@ unsigned Node::GetQuadrant( Particle* p ) const {
     return idx;
 }
 
+std::ostream& operator<<( std::ostream& os, const Node& node ) {
+    os << "[NODE " << &node << "] LVL=" << node.level_ << "/IDX=" << node.index_
+        << " (L,R,B,T)=(" << node.left_ << "," << node.right_ << ","
+        << node.bottom_ << "," << node.top_
+        << ") CHILD=( ";
+    for( unsigned ic(0); ic<4; ic++ )
+        os << node.children_[ic] << " ";
+    os << ")";
+    return os;
+}
+
 /* ------------------------------------------- */
 
 QuadTree::QuadTree( const SConfig& config )
@@ -238,4 +249,9 @@ SError QuadTree::AddParticle( std::vector<Particle*> p ) {
     for( auto ap : p )
         this->AddParticle( ap );
     return E_SUCCESS;
+}
+
+std::ostream& operator<<( std::ostream& os, const QuadTree& tree ) {
+    os << "[TREE " << &tree << "] root_=" << tree.root_;
+    return os;
 }
