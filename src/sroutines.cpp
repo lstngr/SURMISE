@@ -15,14 +15,14 @@ Simulation::~Simulation() {
 SError Simulation::Run() {
     std::cout << "SURMISE run begins." << std::endl;
     BuildTree();
-    std::cout << *tree_ << std::endl;
-    ComputeForces();
     io_.WriteOutput( *this );
-    // for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
-    //     ComputeForces();
-    //     TimeEvolution();
-    //     UpdateTree();
-    // }
+    ComputeForces();
+    for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
+        ComputeForces();
+    //    TimeEvolution();
+    //    UpdateTree();
+        io_.WriteOutput( *this );
+    }
     return E_SUCCESS;
 }
 
@@ -59,8 +59,6 @@ SError Simulation::ComputeForces() const {
                 }
             }
         }
-        std::cout << "Done interacting with " << *leaf << std::endl
-            << "Total force applied: (" << leaf->GetForce(0) << "," << leaf->GetForce(1) << ")" << std::endl;
         // Fetch next leaf and reset the interaction pointer.
         leaf = tree_->GetNextLeaf(leaf);
         node = tree_->GetRoot();

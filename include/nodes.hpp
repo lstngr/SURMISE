@@ -48,6 +48,7 @@ class Node {
         SError ResetForces() const;
         SError Interact( const Node& other ) const;
         friend class QuadTree;
+        friend class IOManager;
         friend std::ostream& operator<<( std::ostream& os, const Node& node );
         friend std::ostream& operator<<( std::ostream& os, const QuadTree& tree );
     private:

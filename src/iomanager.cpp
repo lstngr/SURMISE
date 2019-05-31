@@ -17,7 +17,11 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
     ptr = sim.tree_->GetNextLeaf( ptr );
     // Iterate over tree (GetNextLeaf) until found all paptricles.
     while( ptr!=NULL ) {
-        particles << *ptr << std::endl;
+        particles << ptr->com_->id << "," << ptr->com_->mass << ","
+            << ptr->com_->pos[0] << "," << ptr->com_->pos[1] << ","
+            << ptr->com_->vel[0] << "," << ptr->com_->vel[1] << ","
+            << ptr->com_->frc[0] << "," << ptr->com_->frc[1]
+            << std::endl;
         ptr = sim.tree_->GetNextLeaf( ptr );
     }
     CloseStream( particles );
