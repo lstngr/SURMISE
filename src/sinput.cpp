@@ -21,7 +21,7 @@ int ReadInputFile( SConfig& sim_conf, const std::string& filename, const std::st
     sim_conf.dsize      = cfg.get<double>("domsize");
     sim_conf.npart      = cfg.get<int>("npart");
     sim_conf.dt         = cfg.get<double>("tevol_dt");
-    sim_conf.epsilon    = cfg.get<double>("epsilon");
+    sim_conf.theta      = cfg.get<double>("theta");
     sim_conf.max_iter   = cfg.get<int>("max_iter");
     sim_conf.max_wtime  = cfg.get<double>("walltime");
     sim_conf.extra_time = cfg.get<double>("extratime");

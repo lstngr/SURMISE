@@ -39,10 +39,14 @@ class Node {
         std::array<double,4> GetBounds() const;
         long long GetLevel() const;
         long long GetIndex() const;
+        double GetWidth() const;
         double GetMass() const;
         bool BelongsTo( Particle *p ) const;
         unsigned GetQuadrant( Particle* p ) const;
         unsigned GetQuadrant( Node* n ) const;
+        double GetForce( unsigned dim ) const;
+        SError ResetForces() const;
+        SError Interact( const Node& other ) const;
         friend class QuadTree;
         friend std::ostream& operator<<( std::ostream& os, const Node& node );
         friend std::ostream& operator<<( std::ostream& os, const QuadTree& tree );
@@ -60,14 +64,18 @@ class Node {
         double left_,right_,top_,bottom_;
 };
 
+double distance( const Node& n1, const Node& n2 );
+
 class QuadTree {
     public:
         QuadTree( const SConfig& config );
         ~QuadTree();
         Node* GetRoot() const { return root_; }
         Node* GetNext( Node* ptr ) const;
-        SError AddParticle( Particle* p );
-        SError AddParticle( std::vector<Particle*> p );
+        Node* GetDown( Node* ptr ) const;
+        Node* GetNextLeaf( Node* ptr ) const;
+        SError AddParticle( Particle* p ) const;
+        SError AddParticle( std::vector<Particle*> p ) const;
         friend std::ostream& operator<<( std::ostream& os, const QuadTree& tree );
     private:
         Node* root_;

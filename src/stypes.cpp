@@ -49,3 +49,13 @@ std::ostream& operator<<( std::ostream& os, const Particle& p ) {
     return os;
 }
 
+std::array<double,2> pp_force( const Particle& p1, const Particle& p2 ) {
+    // NOTE - We compute the square of the distance instead of working with the
+    // Node's functions.
+    double strength( - p1.mass * p2.mass / ( ( p1.pos[0]-p2.pos[0] )*( p1.pos[0]-p2.pos[0] ) + ( p1.pos[1]-p2.pos[1] )*( p1.pos[1]-p2.pos[1] ) ) );
+    std::array<double,2> force{
+        strength * (p1.pos[0] - p2.pos[0]),
+        strength * (p1.pos[1] - p2.pos[1])
+    };
+    return force;
+}

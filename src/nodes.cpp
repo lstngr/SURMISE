@@ -110,6 +110,10 @@ long long Node::GetLevel() const { return level_; }
  */
 long long Node::GetIndex() const { return index_; }
 
+double Node::GetWidth() const {
+    return right_ - left_;
+}
+
 /** @brief Returns true if the argmuent Particle is in the domain
  * @details Many more things
  * @param[in] p Pointer to a Particle object.
@@ -140,6 +144,24 @@ unsigned Node::GetQuadrant( Node* n ) const {
     return GetQuadrant( &tmp );
 }
 
+double Node::GetForce( unsigned dim ) const {
+    /// @todo Delete this fucking mess.
+    return com_->frc[dim];
+}
+
+SError Node::ResetForces() const {
+    com_->frc[0] = 0.0;
+    com_->frc[1] = 0.0;
+    return E_SUCCESS;
+}
+
+SError Node::Interact( const Node& other ) const {
+    std::array<double,2> afrc = pp_force( *(this->com_), *(other.com_) );
+    this->com_->frc[0] += afrc[0];
+    this->com_->frc[1] += afrc[1];
+    return E_SUCCESS;
+}
+
 std::ostream& operator<<( std::ostream& os, const Node& node ) {
     os  << "[NODE " << &node << "] LVL=" << node.level_
         // << "/IDX=" << std::bitset<8*sizeof(long long)>(node.index_)
@@ -151,6 +173,12 @@ std::ostream& operator<<( std::ostream& os, const Node& node ) {
         os << node.children_[ic] << " ";
     os << ")";
     return os;
+}
+
+double distance( const Node& n1, const Node& n2 ) {
+    const std::array<double,2>& pos1( n1.GetCenterOfMass() );
+    const std::array<double,2>& pos2( n1.GetCenterOfMass() );
+    return std::sqrt( ( pos1[0]-pos2[0] )*( pos1[0]-pos2[0] ) + ( pos1[1]-pos2[1] )*( pos1[1]-pos2[1] ) );
 }
 
 /* ------------------------------------------- */
@@ -189,10 +217,7 @@ Node* QuadTree::GetNext( Node* ptr ) const {
         // next one (horizontal move in the tree).
         if( nxt->GetIndex() < 3) {
             nxt = nxt->GetParent()->GetChild( nxt->GetIndex() + 1 );
-            // We are in a new branch, follow the first child until we're back
-            // at the starting level.
-            while( nxt->GetLevel() != ptr->level_ )
-                nxt = nxt->GetChild( 0 );
+            // We're happy at a higher level than before, return.
             return nxt;
         }
         // If this statement is reached, this means the investigated parent is
@@ -202,7 +227,62 @@ Node* QuadTree::GetNext( Node* ptr ) const {
     }
 }
 
-SError QuadTree::AddParticle( Particle* p ){
+Node* QuadTree::GetDown( Node* ptr ) const {
+    // Follow first child available
+    for( unsigned ic(0); ic<4; ic++ ) {
+        if( ptr->children_[ic] != NULL ) {
+            ptr = ptr->children_[ic];
+            break;
+        }
+    }
+    return ptr;
+}
+
+Node* QuadTree::GetNextLeaf( Node* ptr ) const {
+    if(ptr==NULL){
+        return NULL;
+    }
+    Node* nxt(ptr);
+    do{
+        // Goes as deep as it can.
+        if( not nxt->IsLeaf() ) {
+            for( unsigned ic(0); ic<4; ic++ ) {
+                if( nxt->GetChild(ic) != NULL ) {
+                    nxt = nxt->GetChild(ic);
+                    break;
+                }
+            }
+        } else {
+            // We reached a leaf. Need to go up until we can move again.
+            bool go_up(true);
+            while(go_up){
+                // If we're at the root, cannot climb
+                if(nxt->IsRoot()){
+                    return NULL;
+                }
+                // Else get the parent.
+                // Figure out our index from parent
+                unsigned icur(nxt->GetParent()->GetQuadrant(nxt));
+                nxt = nxt->GetParent();
+                for( unsigned ic(icur+1); ic<4; ic++ ) {
+                    if( nxt->GetChild(ic) != NULL ){
+                        // Found a child from parent
+                        nxt = nxt->GetChild(ic);
+                        go_up = false;
+                        break;
+                    }
+                }
+                // Here, we're about to redo the while.
+                // If go_up = false, we found a child to go to.
+                // Else, the routine restarts and goes up one other level.
+            }
+        }
+        // We only exit the routine if the candidate node is a leaf.
+    }while(not nxt->IsLeaf());
+    return nxt;
+}
+
+SError QuadTree::AddParticle( Particle* p ) const {
     Node* ptr(this->root_);
     while(true) {
         unsigned ic( ptr->GetQuadrant( p ) );
@@ -246,7 +326,7 @@ SError QuadTree::AddParticle( Particle* p ){
     return E_SUCCESS;
 }
 
-SError QuadTree::AddParticle( std::vector<Particle*> p ) {
+SError QuadTree::AddParticle( std::vector<Particle*> p ) const {
     for( auto ap : p )
         this->AddParticle( ap );
     return E_SUCCESS;

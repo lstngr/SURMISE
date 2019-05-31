@@ -26,6 +26,7 @@ struct Particle {
 };
 Particle operator+( Particle lhs, const Particle& rhs );
 std::ostream& operator<<( std::ostream& os, const Particle& p );
+std::array<double,2> pp_force( const Particle& p1, const Particle& p2 );
 
 /** @brief Structure containing the simulation parameters.
  * @details Will be read by the root MPI process and passed to other instances
@@ -46,6 +47,7 @@ struct SConfig {
     double extra_time; //!< Extra time (substracted from max_wtime), allows exit routines to be performed peacefully.
     std::vector<Particle*> parts; //!< Particles to be simulated.
     std::string opath;
+    double theta;
 };
 
 #endif // SURMISE_STYPES
