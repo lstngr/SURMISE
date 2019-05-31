@@ -200,13 +200,17 @@ QuadTree::~QuadTree() {
 
 Node* QuadTree::GetNext( Node* ptr ) const {
     // If we're at the Root, we want to return immediately.
-    if( ptr->level_ == 0 )
+    if( ptr->IsRoot() )
         return NULL;
     // Node is not last in quad tree decomposition. Parent has a child with
     // higher index (which we return, most common case).
     unsigned int idx(ptr->index_%4);
-    if( idx<3 )
-        return ptr->GetParent()->GetChild( idx + 1 );
+    for( unsigned uidx(idx+1); uidx<3; uidx++ ) {
+        if( ptr->GetParent()->GetChild(uidx) != NULL ) {
+            ptr = ptr->GetParent()->GetChild(uidx);
+            return ptr;
+        }
+    }
     // Else, we need to search the next Node among the parents, get the current
     // node's.
     Node* nxt( ptr->GetParent() );
@@ -215,14 +219,16 @@ Node* QuadTree::GetNext( Node* ptr ) const {
     while( true ) {
         // If reached RootNode, return NULL; we come from the last child of this
         // RootNode and cannot look further.
-        if( nxt->GetLevel() == 0)
+        if( nxt->IsRoot() )
             return NULL;
         // This node's parent contains more interesting children, select the
         // next one (horizontal move in the tree).
-        if( nxt->GetIndex() < 3) {
-            nxt = nxt->GetParent()->GetChild( nxt->GetIndex() + 1 );
-            // We're happy at a higher level than before, return.
-            return nxt;
+        idx = ptr->index_%4;
+        for( unsigned uidx(idx+1); uidx<3; uidx++ ) {
+            if( ptr->GetParent()->GetChild(uidx) != NULL ) {
+                ptr = ptr->GetParent()->GetChild(uidx);
+                return ptr;
+            }
         }
         // If this statement is reached, this means the investigated parent is
         // also the last child of the "upper" level, we need to search higher up

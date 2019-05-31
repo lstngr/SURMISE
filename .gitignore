@@ -26,3 +26,5 @@ tags
 /Report/**/*.aux
 /Report/**/*.log
 /Report/**/*.gz
+
+.ipynb_checkpoints
