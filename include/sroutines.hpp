@@ -15,6 +15,7 @@ class Simulation {
         ~Simulation();
         SError Run();
     private:
+        friend class IOManager;
         SError BuildTree();
         SError UpdateTree();
         SError ComputeForces();

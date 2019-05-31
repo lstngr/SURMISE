@@ -1,4 +1,6 @@
 #include "iomanager.hpp"
+#include "sroutines.hpp"
+#include "nodes.hpp"
 #include "config_file.hpp"
 
 IOManager::IOManager( std::string input_path )
@@ -9,10 +11,12 @@ IOManager::IOManager( std::string input_path )
 }
 
 SError IOManager::WriteOutput( const Simulation& sim, unsigned it ) {
-    std::ofstream* ofstrm_conf(NULL);
-    OpenStream( *ofstrm_conf, conf_.opath + ".conf." + std::to_string(it) );
-    // Do something here
-    CloseStream( ofstrm_conf );
+    std::ofstream* ofstrm_particles(NULL);
+    OpenStream( *ofstrm_particles, conf_.opath + ".conf." + std::to_string(it) );
+    // Get Root of the tree
+    Node* rt(sim.tree_->GetRoot());
+    // Iterate over tree (GetNextLeaf) until found all particles.
+    CloseStream( ofstrm_particles );
     return E_SUCCESS;
 }
 

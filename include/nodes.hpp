@@ -64,6 +64,7 @@ class QuadTree {
     public:
         QuadTree( const SConfig& config );
         ~QuadTree();
+        Node* GetRoot() const { return root_; }
         Node* GetNext( Node* ptr ) const;
         SError AddParticle( Particle* p );
         SError AddParticle( std::vector<Particle*> p );
