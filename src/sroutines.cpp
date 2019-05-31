@@ -65,3 +65,16 @@ SError Simulation::ComputeForces() const {
     };
     return E_SUCCESS;
 }
+
+SError Simulation::TimeEvolution() const {
+    Node* leaf = tree_->GetNextLeaf(tree_->GetRoot());
+    Particle* p( leaf->GetParticle() );
+    while( leaf != NULL ) {
+        p->pos[0] += p->vel[0] * conf_.dt;
+        p->pos[1] += p->vel[1] * conf_.dt;
+        p->vel[0] += p->frc[0] / p->mass * conf_.dt;
+        p->vel[1] += p->frc[1] / p->mass * conf_.dt;
+        leaf = tree_->GetNextLeaf( leaf );
+    }
+    return E_SUCCESS;
+}
