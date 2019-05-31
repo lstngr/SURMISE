@@ -18,8 +18,7 @@ class IOManager {
         SError WriteOutput( const Simulation& sim );
         const SConfig& GetConfig() const;
     private:
-        SError GenerateConfig( const std::string& cfile,
-                const std::string& ifile );
+        SError GenerateConfig( const std::string& file );
         SError OpenStream( std::ofstream& ofstrm, const std::string& ofile ) const;
         SError CloseStream( std::ofstream& ofstrm ) const;
         SConfig conf_;

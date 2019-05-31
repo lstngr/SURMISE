@@ -8,9 +8,8 @@
 #include "sroutines.hpp"
 
 int main( int argc, char** argv ){
-    int errc(0);
-    SConfig conf(ReadInputs(argc,argv,errc));
-    Simulation sim( conf );
+    IOManager io( argv[1] );
+    Simulation sim( io );
     sim.Run();
     return 0;
 }

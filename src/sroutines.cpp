@@ -1,6 +1,10 @@
 #include <iostream>
 #include "sroutines.hpp"
 
+Simulation::Simulation( IOManager& io )
+    :io_(io), conf_( io.GetConfig() )
+{}
+
 Simulation::~Simulation() {
     if(tree_!=NULL) {
         delete tree_;
@@ -13,6 +17,7 @@ SError Simulation::Run() {
     BuildTree();
     std::cout << *tree_ << std::endl;
     ComputeForces();
+    io_.WriteOutput( *this );
     // for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
     //     ComputeForces();
     //     TimeEvolution();

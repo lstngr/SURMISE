@@ -6,12 +6,13 @@
 #define SURMISE_SROUTINES_HPP_
 
 #include "stypes.hpp"
+#include "iomanager.hpp"
 #include "nodes.hpp"
 #include "serrors.hpp"
 
 class Simulation {
     public:
-        Simulation( const SConfig& conf ) :conf_(conf){}
+        Simulation( IOManager& io );
         ~Simulation();
         SError Run();
     private:
@@ -20,6 +21,7 @@ class Simulation {
         SError UpdateTree() const;
         SError ComputeForces() const;
         SError TimeEvolution() const;
+        IOManager& io_;
         const SConfig& conf_;
         QuadTree* tree_;
 };

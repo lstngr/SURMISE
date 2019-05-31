@@ -46,6 +46,7 @@ struct SConfig {
     double max_wtime; //!< Maximum wall time allowed.
     double extra_time; //!< Extra time (substracted from max_wtime), allows exit routines to be performed peacefully.
     std::vector<Particle*> parts; //!< Particles to be simulated.
+    std::string ipath;
     std::string opath;
     double theta;
 };

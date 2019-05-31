@@ -6,14 +6,12 @@
 IOManager::IOManager( std::string input_path )
     :write_iter(0)
 {
-    std::string conf_path( input_path + ".conf" );
-    std::string init_path( input_path + ".init" );
-    GenerateConfig( conf_path, init_path );
+    GenerateConfig( input_path );
 }
 
 SError IOManager::WriteOutput( const Simulation& sim ) {
     std::ofstream particles;
-    OpenStream( particles, conf_.opath + ".conf." + std::to_string(write_iter) );
+    OpenStream( particles, conf_.opath + ".leafs." + std::to_string(write_iter) );
     // Get Root of the tree
     Node* ptr(sim.tree_->GetRoot());
     ptr = sim.tree_->GetNextLeaf( ptr );
@@ -31,17 +29,22 @@ const SConfig& IOManager::GetConfig() const {
     return conf_;
 }
 
-SError IOManager::GenerateConfig( const std::string& cfile, const std::string& ifile ) {
+SError IOManager::GenerateConfig( const std::string& file ) {
+    std::string cfile( file+".conf" );
+    std::string ifile( file+".init" );
+    std::string oname( file );
+    oname = oname.substr( oname.find_last_of("/\\")+1, oname.length());
     ConfigFile cfg(cfile);
     // Load basic parameters
     conf_.dsize      = cfg.get<double>("domsize");
     conf_.npart      = cfg.get<int>("npart");
     conf_.dt         = cfg.get<double>("tevol_dt");
-    conf_.epsilon    = cfg.get<double>("epsilon");
+    conf_.theta      = cfg.get<double>("theta");
     conf_.max_iter   = cfg.get<int>("max_iter");
     conf_.max_wtime  = cfg.get<double>("walltime");
     conf_.extra_time = cfg.get<double>("extratime");
-    conf_.opath      = cfg.get<std::string>("output_path");
+    conf_.ipath      = file;
+    conf_.opath      = cfg.get<std::string>("output_path") + oname;
     // Load particles
     // Particle array is dynamically allocated and should match input file size.
     conf_.parts.reserve(conf_.npart);

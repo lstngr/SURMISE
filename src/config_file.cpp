@@ -63,7 +63,7 @@ void ConfigFile::process(const std::string& lineread) {
 
 template<typename T> T ConfigFile::get(const std::string& key) const{
     std::map<std::string, std::string>::const_iterator val = configMap.find(key);
-    T out(0.0);
+    T out{};
     if ( val != configMap.end() ) {
         std::istringstream iss(val->second);
         iss >> out;
@@ -98,4 +98,4 @@ std::string ConfigFile::trim(std::string str)
 // Instantiate required templates
 template int ConfigFile::get<int>(const std::string& key) const;
 template double ConfigFile::get<double>(const std::string& key) const;
-// template std::string ConfigFile::get<std::string>(const std::string& key) const;
+template std::string ConfigFile::get<std::string>(const std::string& key) const;
