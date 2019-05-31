@@ -181,7 +181,7 @@ std::ostream& operator<<( std::ostream& os, const Node& node ) {
 
 double distance( const Node& n1, const Node& n2 ) {
     const std::array<double,2>& pos1( n1.GetCenterOfMass() );
-    const std::array<double,2>& pos2( n1.GetCenterOfMass() );
+    const std::array<double,2>& pos2( n2.GetCenterOfMass() );
     return std::sqrt( ( pos1[0]-pos2[0] )*( pos1[0]-pos2[0] ) + ( pos1[1]-pos2[1] )*( pos1[1]-pos2[1] ) );
 }
 
@@ -205,7 +205,7 @@ Node* QuadTree::GetNext( Node* ptr ) const {
     // Node is not last in quad tree decomposition. Parent has a child with
     // higher index (which we return, most common case).
     unsigned int idx(ptr->index_%4);
-    for( unsigned uidx(idx+1); uidx<3; uidx++ ) {
+    for( unsigned uidx(idx+1); uidx<4; uidx++ ) {
         if( ptr->GetParent()->GetChild(uidx) != NULL ) {
             ptr = ptr->GetParent()->GetChild(uidx);
             return ptr;
@@ -223,11 +223,11 @@ Node* QuadTree::GetNext( Node* ptr ) const {
             return NULL;
         // This node's parent contains more interesting children, select the
         // next one (horizontal move in the tree).
-        idx = ptr->index_%4;
-        for( unsigned uidx(idx+1); uidx<3; uidx++ ) {
-            if( ptr->GetParent()->GetChild(uidx) != NULL ) {
-                ptr = ptr->GetParent()->GetChild(uidx);
-                return ptr;
+        idx = nxt->index_%4;
+        for( unsigned uidx(idx+1); uidx<4; uidx++ ) {
+            if( nxt->GetParent()->GetChild(uidx) != NULL ) {
+                nxt = nxt->GetParent()->GetChild(uidx);
+                return nxt;
             }
         }
         // If this statement is reached, this means the investigated parent is
