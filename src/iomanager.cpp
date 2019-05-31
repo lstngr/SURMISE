@@ -4,19 +4,26 @@
 #include "config_file.hpp"
 
 IOManager::IOManager( std::string input_path )
+    :write_iter(0)
 {
     std::string conf_path( input_path + ".conf" );
     std::string init_path( input_path + ".init" );
     GenerateConfig( conf_path, init_path );
 }
 
-SError IOManager::WriteOutput( const Simulation& sim, unsigned it ) {
-    std::ofstream* ofstrm_particles(NULL);
-    OpenStream( *ofstrm_particles, conf_.opath + ".conf." + std::to_string(it) );
+SError IOManager::WriteOutput( const Simulation& sim ) {
+    std::ofstream particles;
+    OpenStream( particles, conf_.opath + ".conf." + std::to_string(write_iter) );
     // Get Root of the tree
-    Node* rt(sim.tree_->GetRoot());
-    // Iterate over tree (GetNextLeaf) until found all particles.
-    CloseStream( ofstrm_particles );
+    Node* ptr(sim.tree_->GetRoot());
+    ptr = sim.tree_->GetNextLeaf( ptr );
+    // Iterate over tree (GetNextLeaf) until found all paptricles.
+    while( ptr!=NULL ) {
+        particles << *ptr << std::endl;
+        ptr = sim.tree_->GetNextLeaf( ptr );
+    }
+    CloseStream( particles );
+    write_iter++;
     return E_SUCCESS;
 }
 
@@ -55,5 +62,12 @@ SError IOManager::GenerateConfig( const std::string& cfile, const std::string& i
 }
 
 SError IOManager::OpenStream( std::ofstream& ofstrm, const std::string& ofile ) const {
+    ofstrm.open( ofile, std::ofstream::out );
+    return E_SUCCESS;
+}
+
+SError IOManager::CloseStream( std::ofstream& ofstrm ) const {
+    ofstrm.flush();
+    ofstrm.close();
     return E_SUCCESS;
 }

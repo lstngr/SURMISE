@@ -15,14 +15,15 @@ class Simulation;
 class IOManager {
     public:
         IOManager( std::string input_path );
-        SError WriteOutput( const Simulation& sim, unsigned it );
+        SError WriteOutput( const Simulation& sim );
         const SConfig& GetConfig() const;
     private:
         SError GenerateConfig( const std::string& cfile,
                 const std::string& ifile );
         SError OpenStream( std::ofstream& ofstrm, const std::string& ofile ) const;
-        SError CloseStream( std::ofstream* ptr ) const;
+        SError CloseStream( std::ofstream& ofstrm ) const;
         SConfig conf_;
+        unsigned write_iter;
 };
 
 #endif // SURMISE_IOMANAGER_HPP_
