@@ -82,6 +82,10 @@ bool Node::IsLeaf() const {
     return true;
 }
 
+Particle* Node::GetParticle() const {
+    return com_;
+}
+
 /** @brief Computes the geometrical center of the calling node from its
  * boundaries.
  */
