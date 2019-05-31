@@ -26,3 +26,5 @@ tags
 /Report/**/*.aux
 /Report/**/*.log
 /Report/**/*.gz
+# Jupyter shitty extensions
+.ipynb_checkpoints

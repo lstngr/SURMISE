@@ -10,21 +10,75 @@ IOManager::IOManager( std::string input_path )
 }
 
 SError IOManager::WriteOutput( const Simulation& sim ) {
-    std::ofstream particles;
+    std::ofstream particles, tree;
     OpenStream( particles, conf_.opath + ".leafs." + std::to_string(write_iter) );
+    OpenStream( tree, conf_.opath + ".tree." + std::to_string(write_iter) );
     // Get Root of the tree
-    Node* ptr(sim.tree_->GetRoot());
-    ptr = sim.tree_->GetNextLeaf( ptr );
-    // Iterate over tree (GetNextLeaf) until found all paptricles.
-    while( ptr!=NULL ) {
-        particles << ptr->com_->id << "," << ptr->com_->mass << ","
-            << ptr->com_->pos[0] << "," << ptr->com_->pos[1] << ","
-            << ptr->com_->vel[0] << "," << ptr->com_->vel[1] << ","
-            << ptr->com_->frc[0] << "," << ptr->com_->frc[1]
+    Node* pptr(sim.tree_->GetRoot());
+    pptr = sim.tree_->GetNextLeaf( pptr );
+    Node* tptr(sim.tree_->GetRoot());
+    // PARTICLE PRINTING
+    // Iterate over tree (GetNextLeaf) until found all papptricles.
+    while( pptr!=NULL ) {
+        particles << pptr->com_->id << "," << pptr->com_->mass << ","
+            << pptr->com_->pos[0] << "," << pptr->com_->pos[1] << ","
+            << pptr->com_->vel[0] << "," << pptr->com_->vel[1] << ","
+            << pptr->com_->frc[0] << "," << pptr->com_->frc[1]
             << std::endl;
-        ptr = sim.tree_->GetNextLeaf( ptr );
+        pptr = sim.tree_->GetNextLeaf( pptr );
+    }
+    // TREE PRINTING
+    tree << tptr << "," << tptr->children_[0] << ","
+        << tptr->children_[1] << ","
+        << tptr->children_[2] << ","
+        << tptr->children_[3] << std::endl;
+    bool print_tree(true);
+    while(print_tree) {
+        // Goes as deep as it can, prints all nodes when stepping down.
+        if( not tptr->IsLeaf() ) {
+            for( unsigned ic(0); ic<4; ic++ ) {
+                if( tptr->GetChild(ic) != NULL ) {
+                    tptr = tptr->GetChild(ic);
+                    tree << tptr << "," << tptr->children_[0] << ","
+                         << tptr->children_[1] << ","
+                         << tptr->children_[2] << ","
+                         << tptr->children_[3] << std::endl;
+                    break;
+                }
+            }
+        } else {
+            // We reached a leaf. Need to go up until we can move again.
+            bool go_up(true);
+            while(go_up){
+                // If we're at the root, cannot climb
+                if(tptr->IsRoot()){
+                    print_tree=false;
+                    break;
+                }
+                // Else get the parent.
+                // Figure out our index from parent
+                unsigned icur(tptr->GetParent()->GetQuadrant(tptr));
+                tptr = tptr->GetParent();
+                for( unsigned ic(icur+1); ic<4; ic++ ) {
+                    if( tptr->GetChild(ic) != NULL ){
+                        // Found a child from parent
+                        tptr = tptr->GetChild(ic);
+                        tree << tptr << "," << tptr->children_[0] << ","
+                            << tptr->children_[1] << ","
+                            << tptr->children_[2] << ","
+                            << tptr->children_[3] << std::endl;
+                        go_up = false;
+                        break;
+                    }
+                }
+                // Here, we're about to redo the while.
+                // If go_up = false, we found a child to go to.
+                // Else, the routine restarts and goes up one other level.
+            }
+        }
     }
     CloseStream( particles );
+    CloseStream( tree );
     write_iter++;
     return E_SUCCESS;
 }
