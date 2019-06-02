@@ -70,8 +70,9 @@ SError Simulation::ComputeForces() const {
                 // A node can't interact with itself, skip if encountered
                 node = tree_->GetNext(node);
             } else {
-                if( node->GetWidth() / distance(*leaf,*node) >= this->conf_.theta
-                        and not node->IsLeaf() ) {
+                if( node->GetWidth()*node->GetWidth() >= this->conf_.theta *
+                        this->conf_.theta * distance2(*leaf,*node) and not
+                        node->IsLeaf() ) {
                     // The refinement level is too coarse, move the node pointer
                     // down and retry with children.
                     node = tree_->GetDown(node);

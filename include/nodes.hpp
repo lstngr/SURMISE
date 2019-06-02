@@ -69,6 +69,7 @@ class Node {
 };
 
 double distance( const Node& n1, const Node& n2 );
+double distance2( const Node& n1, const Node& n2 );
 
 class QuadTree {
     public:

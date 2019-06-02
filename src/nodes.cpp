@@ -191,10 +191,14 @@ std::ostream& operator<<( std::ostream& os, const Node& node ) {
     return os;
 }
 
-double distance( const Node& n1, const Node& n2 ) {
+double distance2( const Node& n1, const Node& n2 ) {
     const std::array<double,2>& pos1( n1.GetCenterOfMass() );
     const std::array<double,2>& pos2( n2.GetCenterOfMass() );
-    return std::sqrt( ( pos1[0]-pos2[0] )*( pos1[0]-pos2[0] ) + ( pos1[1]-pos2[1] )*( pos1[1]-pos2[1] ) );
+    return ( pos1[0]-pos2[0] )*( pos1[0]-pos2[0] ) + ( pos1[1]-pos2[1] )*( pos1[1]-pos2[1] );
+}
+
+double distance( const Node& n1, const Node& n2 ) {
+    return std::sqrt( distance2(n1,n2) );
 }
 
 /* ------------------------------------------- */
