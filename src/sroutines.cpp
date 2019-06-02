@@ -115,8 +115,8 @@ SError Simulation::ComputeForces() const {
 
 SError Simulation::TimeEvolution() const {
     Node* leaf = tree_->GetNextLeaf(tree_->GetRoot());
-    Particle* p( leaf->GetParticle() );
     while( leaf != NULL ) {
+        Particle* p( leaf->GetParticle() );
         p->pos[0] += p->vel[0] * conf_.dt;
         p->pos[1] += p->vel[1] * conf_.dt;
         p->vel[0] += p->frc[0] / p->mass * conf_.dt;
