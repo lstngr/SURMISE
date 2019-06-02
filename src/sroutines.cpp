@@ -58,6 +58,8 @@ SError Simulation::UpdateTree() const {
     // according to leaf nodes. A first pass resets them, a second one updates
     // them with leaf info.
     leaf = tree_->GetNextLeaf( tree_->GetRoot() );
+    if( leaf==NULL )
+        return E_SUCCESS;
     do {
         Node* up( leaf->GetParent() );
         do {

@@ -390,7 +390,7 @@ SError QuadTree::PruneNode( Node* ptr ) const {
     unsigned ic( ptr->GetIndex() % 4 );
     delete n->children_[ic];
     n->children_[ic] = NULL;
-    while( true ) {
+    while( n != NULL ) {
         if( n->ChildrenCount() != 1 ) {
             break;
         } else {
