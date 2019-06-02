@@ -22,7 +22,7 @@ for it=1:ts
     axis equal
     title(['it=',num2str(it)])
     drawnow
-    pause(1)
+    pause(0.1)
     clf
 end
 end
