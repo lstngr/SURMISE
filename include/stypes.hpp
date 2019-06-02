@@ -23,8 +23,10 @@ struct Particle {
     Particle( const Particle& other );
     Particle& operator=( const Particle& rhs );
     Particle& operator+=( const Particle& other );
+    Particle& operator-=( const Particle& other );
 };
 Particle operator+( Particle lhs, const Particle& rhs );
+Particle operator-( Particle lhs, const Particle& rhs );
 std::ostream& operator<<( std::ostream& os, const Particle& p );
 std::array<double,2> pp_force( const Particle& p1, const Particle& p2 );
 

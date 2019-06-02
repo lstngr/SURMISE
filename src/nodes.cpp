@@ -342,6 +342,22 @@ SError QuadTree::AddParticle( std::vector<Particle*> p ) const {
     return E_SUCCESS;
 }
 
+SError QuadTree::RemoveParticle( Node* ptr ) const {
+    Node *node( ptr->GetParent() );
+    // Remove the particle's upstream influence in higher levels.
+    while( node != NULL ){
+        *(node->com_) -= *(ptr->com_);
+        node = node->GetParent();
+    }
+    // If the Particle is a fictive one, delete it.
+    /// @todo This is definitely not a good idea.
+    if( ptr->com_->id == -1 ) {
+        delete ptr->com_;
+    }
+    ptr->com_ = NULL;
+    return E_SUCCESS;
+}
+
 std::ostream& operator<<( std::ostream& os, const QuadTree& tree ) {
     os << "[TREE " << &tree << "] root_=" << tree.root_ << std::endl;
     Node* ptr(tree.root_);

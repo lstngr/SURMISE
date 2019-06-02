@@ -78,6 +78,7 @@ class QuadTree {
         Node* GetNextLeaf( Node* ptr ) const;
         SError AddParticle( Particle* p ) const;
         SError AddParticle( std::vector<Particle*> p ) const;
+        SError RemoveParticle( Node* ptr ) const;
         friend std::ostream& operator<<( std::ostream& os, const QuadTree& tree );
     private:
         Node* root_;

@@ -17,10 +17,11 @@ SError Simulation::Run() {
     BuildTree();
     io_.WriteOutput( *this );
     ComputeForces();
+    TimeEvolution();
     for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
         ComputeForces();
-    //    TimeEvolution();
-    //    UpdateTree();
+        TimeEvolution();
+        UpdateTree();
         io_.WriteOutput( *this );
     }
     return E_SUCCESS;
@@ -30,6 +31,25 @@ SError Simulation::BuildTree() {
     std::cout << "Starting tree decomposition." << std::endl;
     tree_ = new QuadTree( conf_ );
     tree_->AddParticle( conf_.parts );
+    return E_SUCCESS;
+}
+
+SError Simulation::UpdateTree() const {
+    Node *leaf( tree_->GetNextLeaf( tree_->GetRoot() ) );
+    // Reassignement step. Particles are moved where they're supposed to be.
+    do {
+        // If the particle moved out of its node's coverage area, reassignement
+        // is needed.
+        // The Add-/RemoveParticle methods update upstream informations such as
+        // center of mass and position.
+        Particle *p ( leaf->GetParticle() );
+        if( not leaf->BelongsTo(p) ) {
+            std::cout << "Tree Reassignement Triggered." << std::endl;
+            tree_->RemoveParticle( leaf );
+            tree_->AddParticle( p );
+        }
+        leaf = tree_->GetNextLeaf( leaf );
+    } while( leaf != NULL );
     return E_SUCCESS;
 }
 
