@@ -62,8 +62,12 @@ class Node {
         /**Array of pointers to children node. As we work in the two-dimensional
          space, the size is preallocated to a quad-tree structure.*/
         Node *children_[4];
+        /// Level of the node. The root of a tree has level zero.
         unsigned long long level_;
+        /// Unique index of the node within its level.
         unsigned long long index_;
+        /** Pointer to a particle object describing the center of mass of the
+         * node.*/
         Particle* com_;
         /// Geometrical limits of the node's coverage (of physical space)
         double left_,right_,top_,bottom_;

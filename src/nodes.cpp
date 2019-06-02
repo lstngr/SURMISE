@@ -6,6 +6,15 @@
 
 //////////////////// NODE ///////////////////////
 
+/** @brief Builds a Node without connecting it to a tree.
+ * @details This constructor allows the user to specify a physical range which
+ * the node should be covering, and sets all references to parent or children
+ * nodes to NULL. This constructor is useful to initialize the root of a tree
+ * for example. Note another constructor is provided, which explicitely sets up
+ * reference to a parent node, but the latter is private and will be called by
+ * "wrapper" routines, and not the user directly.
+ * @param[in] left,right,top,bottom Geometrical limits of the Node's domain.
+ */
 Node::Node( double left, double right, double top, double bottom )
     :Node(NULL,NULL)
 {
@@ -14,6 +23,15 @@ Node::Node( double left, double right, double top, double bottom )
     this->bottom_ = bottom; this->left_ = left;
 }
 
+/** @brief Constructor setting up the new Node's references in a tree
+ * automatically.
+ * @details This constructor accepts a reference to a parent node, as well as a
+ * pointer to a particle that will be assigned to its center of mass attribute.
+ * Multiple properties of the node, such as thee geometrical boundaries, the
+ * level and index will be computed from the parent's data.
+ * @param[in] parent Pointer to a parent node.
+ * @param[in] part Pointer to a particle, which we assign to the center of mass.
+ */
 Node::Node( Node* parent, Particle* part )
     :parent_(parent), children_{NULL,NULL,NULL,NULL}, level_(0), index_(0), com_(part), left_(0.0), right_(0.0), top_(0.0), bottom_(0.0)
 {
@@ -36,12 +54,18 @@ Node::Node( Node* parent, Particle* part )
         right_  = parent_->right_  - 0.5*(double)(!is_east) *(parent_->right_-parent_->left_);
         bottom_ = parent_->bottom_ + 0.5*(double)(is_north) *(parent_->top_-parent_->bottom_);
         top_    = parent_->top_    - 0.5*(double)(!is_north)*(parent_->top_-parent_->bottom_);
-        // We found the node, break iteration
     }
 }
 
-/** @brief Manages the destruction of Node objects and memory management.
- * @details Moooar
+/** @brief Manages the destruction of Node objects and frees memory.
+ * @details When a Node is deleted, all its initialized children are first
+ * deleted. The memory is expected to have been allocated dynamically. Then, if
+ * a Particle object is set for the Node, its identifier is compared to -1. If
+ * the Particle is fictious (i.e. it represents the center of mass of multiple
+ * particles in lower levels), it must have been allocated dynamically, and it
+ * is deleted. Else, the Particle corresponds to an actual body that is being
+ * simulated, and its memory was initialized by the IOManager class, and will be
+ * destructed by the SConfig object it lives in.
  */
 Node::~Node() {
     for( unsigned ic(0); ic<4; ic++) {
@@ -58,7 +82,7 @@ Node::~Node() {
     }
 }
 
-/** @brief Returns the parent node of the current object.
+/** Returns the parent node of the current object.
  */
 Node* Node::GetParent() const {
     return parent_;
@@ -71,10 +95,14 @@ Node* Node::GetChild( short int child_idx ) const {
     return children_[child_idx];
 }
 
+/** Answers true if the node is at the root of a tree (level zero).
+ */
 bool Node::IsRoot() const {
     return level_==0;
 }
 
+/** Answers true if all children of the node are null pointers.
+ */
 bool Node::IsLeaf() const {
     for( auto child : children_ )
         if( child != NULL )
@@ -82,12 +110,15 @@ bool Node::IsLeaf() const {
     return true;
 }
 
+/** Returns a pointer to the particle object of the node, that is, to its center
+ * of mass.
+ */
 Particle* Node::GetParticle() const {
     return com_;
 }
 
-/** @brief Computes the geometrical center of the calling node from its
- * boundaries.
+/** @brief Returns the center of mass of the node, which is gotten from the
+ * local Particle object.
  */
 std::array<double,2> Node::GetCenterOfMass() const {
     return this->com_->pos;
@@ -114,12 +145,15 @@ long long Node::GetLevel() const { return level_; }
  */
 long long Node::GetIndex() const { return index_; }
 
+/** Returns the width of the current node, that is, the length of one of its
+ * edges (in this program, all nodes are squares).
+ */
 double Node::GetWidth() const {
     return right_ - left_;
 }
 
-/** @brief Returns true if the argmuent Particle is in the domain
- * @details Many more things
+/** @brief Returns true if the argmuent Particle is in the domain managed by the
+ * caller node.
  * @param[in] p Pointer to a Particle object.
  * @returns Boolean indicating the Particle's belonging to the domain.
  */
@@ -131,10 +165,16 @@ bool Node::BelongsTo( Particle *p ) const {
     return false;
 }
 
+/** Returns true if no Particle is assigned to the current node.
+ */
 bool Node::IsEmpty() const {
     return (this->com_ == NULL );
 }
 
+/** For an input Particle, computes which quadrant of the current node (the
+ * child index) would store this particle. Such a function is useful when
+ * building a tree.
+ */
 unsigned Node::GetQuadrant( Particle* p ) const {
     unsigned idx(0);
     // If particle in top quadrants, toggle zeroth bit.
@@ -146,17 +186,31 @@ unsigned Node::GetQuadrant( Particle* p ) const {
     return idx;
 }
 
+/** For a pointer to a node, computes the quadrant which would host it in the
+ * caller node. The function operating on a particle pointer is used by defining
+ * a Particle centered on the argument node's geometrical center, and passing it
+ * to the other function.
+ * @param[in] n Pointer to a node, supposedly located within the current node's
+ * geometrical boundaries.
+ * @returns Quadrant index with respect to the current node.
+ */
 unsigned Node::GetQuadrant( Node* n ) const {
     Particle tmp;
     tmp.pos = {0.5*(n->left_+n->right_), 0.5*(n->bottom_+n->top_)};
     return GetQuadrant( &tmp );
 }
 
+/** Returns the force applied along dim.
+ * @param[in] dim Index of the dimension along which the force is requested
+ * (0=x, 1=y).
+ */
 double Node::GetForce( unsigned dim ) const {
     /// @todo Delete this fucking mess.
     return com_->frc[dim];
 }
 
+/** Returns the number of initialized children of the caller.
+ */
 short Node::ChildrenCount() const {
     short nc(0);
     for( unsigned ic(0); ic<4; ic++ )
@@ -165,6 +219,10 @@ short Node::ChildrenCount() const {
     return nc;
 }
 
+/** Resets the center of mass of the current Node to default values.
+ * This method is used during tree updates, before passing leaf information up
+ * the tree.
+ */
 SError Node::ResetCenterOfMass() const {
     com_->mass = 0.0;
     com_->pos[0] = 0.0;
@@ -175,12 +233,20 @@ SError Node::ResetCenterOfMass() const {
     return E_SUCCESS;
 }
 
+/** Resets the forces applied to a Node's center of mass.
+ * This method is called by the Simulation::ComputeForce routine.
+ */
 SError Node::ResetForces() const {
     com_->frc[0] = 0.0;
     com_->frc[1] = 0.0;
     return E_SUCCESS;
 }
 
+/** Adds the gravitational force cause by the center of mass of a distant node
+ * to the current node's center of mass.
+ * The distant node's forces are not updated symmetrically.
+ * @param[in] other Reference to a distant node.
+ */
 SError Node::Interact( const Node& other ) const {
     std::array<double,2> afrc = pp_force( *(this->com_), *(other.com_) );
     this->com_->frc[0] += afrc[0];
@@ -188,6 +254,17 @@ SError Node::Interact( const Node& other ) const {
     return E_SUCCESS;
 }
 
+/** @brief Prints Node information to an output stream.
+ * @details This methods prints basic node information to the terminal,
+ * including the node's memory address, its level, index, geometrical
+ * boundaries, as well as the memory addresses of its children.
+ * @note This overloading is thought for debugging purposes, and does not follow
+ * strict conventions as to how the data is output. See IOManager for exporting
+ * simulation results.
+ * @param[in,out] os Output stream to which the information is printed.
+ * @param[in] node Node which's information are to be printed.
+ * @returns The input stream after instertion of the text to print.
+ */
 std::ostream& operator<<( std::ostream& os, const Node& node ) {
     os  << "[NODE " << &node << "] LVL=" << node.level_
         // << "/IDX=" << std::bitset<8*sizeof(long long)>(node.index_)
@@ -201,12 +278,19 @@ std::ostream& operator<<( std::ostream& os, const Node& node ) {
     return os;
 }
 
+/** Returns the squared distance between two nodes. This distance is computed
+ * according to the node's center of mass, and not their geometrical center.
+ */
 double distance2( const Node& n1, const Node& n2 ) {
     const std::array<double,2>& pos1( n1.GetCenterOfMass() );
     const std::array<double,2>& pos2( n2.GetCenterOfMass() );
     return ( pos1[0]-pos2[0] )*( pos1[0]-pos2[0] ) + ( pos1[1]-pos2[1] )*( pos1[1]-pos2[1] );
 }
 
+/** Returns the distance between two nodes, by computing the square root of the
+ * output of the function distance2. It is provided separately to avoid
+ * performance issue.
+ */
 double distance( const Node& n1, const Node& n2 ) {
     return std::sqrt( distance2(n1,n2) );
 }
