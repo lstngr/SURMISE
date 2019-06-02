@@ -165,6 +165,16 @@ short Node::ChildrenCount() const {
     return nc;
 }
 
+SError Node::ResetCenterOfMass() const {
+    com_->mass = 0.0;
+    com_->pos[0] = 0.0;
+    com_->pos[1] = 0.0;
+    com_->vel[0] = 0.0;
+    com_->vel[1] = 0.0;
+    ResetForces();
+    return E_SUCCESS;
+}
+
 SError Node::ResetForces() const {
     com_->frc[0] = 0.0;
     com_->frc[1] = 0.0;

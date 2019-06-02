@@ -15,9 +15,6 @@ Simulation::~Simulation() {
 SError Simulation::Run() {
     std::cout << "SURMISE run begins." << std::endl;
     BuildTree();
-    io_.WriteOutput( *this );
-    ComputeForces();
-    TimeEvolution();
     for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
         ComputeForces();
         TimeEvolution();
@@ -57,6 +54,28 @@ SError Simulation::UpdateTree() const {
             leaf = tree_->GetNextLeaf( leaf );
         }
     } while( leaf != NULL );
+    // Upstream center of mass update. All the center of mass are updated
+    // according to leaf nodes. A first pass resets them, a second one updates
+    // them with leaf info.
+    leaf = tree_->GetNextLeaf( tree_->GetRoot() );
+    do {
+        Node* up( leaf->GetParent() );
+        do {
+            up->ResetCenterOfMass();
+            up = up->GetParent();
+        } while( up != NULL );
+        leaf = tree_->GetNextLeaf(leaf);
+    } while( leaf != NULL );
+    // Recursively add leaf level influence.
+    leaf = tree_->GetNextLeaf( tree_->GetRoot() );
+    do {
+        Node* up( leaf->GetParent() );
+        do {
+            *(up->GetParticle()) += *(leaf->GetParticle());
+            up = up->GetParent();
+        } while( up != NULL );
+        leaf = tree_->GetNextLeaf(leaf);
+    } while( leaf != NULL );
     return E_SUCCESS;
 }
 
@@ -90,7 +109,7 @@ SError Simulation::ComputeForces() const {
         // Fetch next leaf and reset the interaction pointer.
         leaf = tree_->GetNextLeaf(leaf);
         node = tree_->GetRoot();
-    };
+    }
     return E_SUCCESS;
 }
 

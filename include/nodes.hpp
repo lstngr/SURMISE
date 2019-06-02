@@ -48,6 +48,7 @@ class Node {
         unsigned GetQuadrant( Node* n ) const;
         double GetForce( unsigned dim ) const;
         short ChildrenCount() const;
+        SError ResetCenterOfMass() const;
         SError ResetForces() const;
         SError Interact( const Node& other ) const;
         friend class QuadTree;

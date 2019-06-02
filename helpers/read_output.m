@@ -34,8 +34,8 @@ out = zeros(length(allfiles),pnum,7);
 % - variable of interest (mass, pos_x/y, vel_x/y, frc_x/y)
 
 for ifile=1:length(allfiles)
+    data = csvread([allfiles(ifile).folder,'/',allfiles(ifile).name]);
     for il=1:size(data,1)
-        data = csvread([allfiles(ifile).folder,'/',allfiles(ifile).name]);
         out(ifile,data(il,1)+1,1:7) = data(il,2:8);
 %         out(ifile,data(il,1)+1,2) = data(il,3);
 %         out(ifile,data(il,1)+1,3) = data(il,4);
