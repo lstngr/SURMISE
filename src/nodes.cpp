@@ -297,10 +297,20 @@ double distance( const Node& n1, const Node& n2 ) {
 
 /* ------------------------------------------- */
 
+/** Builds a QuadTree object from a simulation configuration. It initializes the
+ * root Node with the geometrical boundaries provided in the configuratio
+ * object.
+ * @param[in] config Reference to a configuration object containing the
+ * simulation's parameters.
+ */
 QuadTree::QuadTree( const SConfig& config )
     :root_(new Node(0.0,config.dsize,config.dsize,0.0))
 {}
 
+/** Since the root node was allocated dynamically, destroy it if still set.
+ * We note the destructors of the children of the root should be called by
+ * Node::~Node.
+ */
 QuadTree::~QuadTree() {
     if( root_ != NULL ) {
         delete root_;
@@ -308,6 +318,22 @@ QuadTree::~QuadTree() {
     }
 }
 
+/** @brief Tree browsing routine moving to the "right" of the tree.
+ * @details Although the QuadTree class stores a pointer to the root of the
+ * tree, it has little idea of the subsequent structure of this one. We provide
+ * routines browsing the tree with the current function.
+ * This methods looks for a Node with a higher index than the passed pointer,
+ * `ptr`. The Node is first search among the parent of `ptr`, and if it cannot
+ * be found (if `ptr` already has the maximal index in the branch), the routine
+ * moves on level up in the tree and retries.
+ * If no node can be found, which means we started with the highest node index
+ * at any possible level, the method reaches the root node and returns NULL. If
+ * a Node is returned, we note that its level might be different (higher) than
+ * the one of `ptr`.
+ * @param[in] ptr Pointer to the starting point of the movement routine.
+ * @returns A pointer to the Node having a higher index than `ptr`, possibly at
+ * a different level, or NULL if no Node can be found.
+ */
 Node* QuadTree::GetNext( Node* ptr ) const {
     // If we're at the Root, we want to return immediately.
     if( ptr->IsRoot() )
@@ -347,6 +373,11 @@ Node* QuadTree::GetNext( Node* ptr ) const {
     }
 }
 
+/** Moves the passed pointer to the child node with lowest index. If no child is
+ * found, the same pointer is returned.
+ * @param[in] ptr Pointer to a node which we want to browse deeper.
+ * @returns A pointer to the first available child of `ptr`.
+ */
 Node* QuadTree::GetDown( Node* ptr ) const {
     // Follow first child available
     for( unsigned ic(0); ic<4; ic++ ) {
@@ -358,6 +389,16 @@ Node* QuadTree::GetDown( Node* ptr ) const {
     return ptr;
 }
 
+/** @brief Looks for the next leaf of the tree from a given starting point.
+ * @details From a given starting point, searches the closest leaf with greater
+ * index. If the starting point, `ptr` is not a leaf, the method finds one by
+ * recursively browsing lower levels. If the starting point is a leaf, the
+ * method browses up the tree, until a parent with a child with a higher index
+ * than the one of `ptr` is found. If no leaf can be found (we started from the
+ * last one for example), the method reaches the root node and returns NULL.
+ * @param[in] ptr Starting point of the tree search.
+ * @returns A pointer to the next available leaf.
+ */
 Node* QuadTree::GetNextLeaf( Node* ptr ) const {
     if(ptr==NULL){
         return NULL;
@@ -402,6 +443,21 @@ Node* QuadTree::GetNextLeaf( Node* ptr ) const {
     return nxt;
 }
 
+/** @brief Adds a Particle to the tree.
+ * @details This method will look for an available child to insert the particle
+ * in, as the node's center of mass. If a region where no Node is initialized is
+ * found, the memory for this node is allocated dynamically, and the particle
+ * assigned. If an occupied Node is found, the routine recursively splits this
+ * Node (deepens the tree) until the particle we wish to insert, and the one
+ * existing already fall into separate regions.
+ * Each time a level is entered, the parent's center of mass is updated to
+ * account for the particle that we will insert, such that upstream information
+ * is already correct.
+ * @param[in] p A pointer to the particle we wish to insert.
+ * @returns An error code.
+ * @todo This routine is not safe if a method tries to insert a copy of an
+ * existing particle (it will deepen the tree forever).
+ */
 SError QuadTree::AddParticle( Particle* p ) const {
     Node* ptr(this->root_);
     while(true) {
@@ -446,12 +502,25 @@ SError QuadTree::AddParticle( Particle* p ) const {
     return E_SUCCESS;
 }
 
+/** This method insert multiple particles, one after the other in the tree.
+ */
 SError QuadTree::AddParticle( std::vector<Particle*> p ) const {
     for( auto ap : p )
         this->AddParticle( ap );
     return E_SUCCESS;
 }
 
+/** Removes a particle from the tree. If a fictive particle is removed, its
+ * memory is freed. Upstream information is updated for the parent nodes' center
+ * of mass.
+ * @param[in] ptr Pointer to the node containing the center of mass to delete
+ * @returns An error code.
+ * @note This method does NOT delete the Node, but leaves it empty. This choice
+ * is motivated by the fact that deleting the Node would alter the tree
+ * structure (sometimes massively) while the tree is browsed by other methods
+ * (RemoveParticle is called by Simulation::UpdateTree). We leave the deletion
+ * of unecessary nodes to a more robust routine, QuadTree::PruneNode.
+ */
 SError QuadTree::RemoveParticle( Node* ptr ) const {
     Node *node( ptr->GetParent() );
     // Remove the particle's upstream influence in higher levels.
@@ -468,6 +537,15 @@ SError QuadTree::RemoveParticle( Node* ptr ) const {
     return E_SUCCESS;
 }
 
+/** @brief Deletes a Node from the tree.
+ * @details Frees the memory associated with the argument Node pointer. The
+ * parent node is then checked, if it contains only one child, this means the
+ * structure of the tree can be simplified (levels can be removed). The
+ * remaining child is found, and "dragged" to higher levels if it is itself a
+ * leaf (if not, the deeper structure is still needed).
+ * @param[in] ptr A pointer to the Node we wish to delete.
+ * @returns An error code.
+ */
 SError QuadTree::PruneNode( Node* ptr ) const {
     // Prune the Node like demanded
     Node* n( ptr->GetParent() );
@@ -511,6 +589,16 @@ SError QuadTree::PruneNode( Node* ptr ) const {
     return E_SUCCESS;
 }
 
+/** @brief Overloaded operator for debugging purposes.
+ * @details This method includes the most
+ * complete tree browsing routine available in this class, QuadTree::GetNext and
+ * QuadTree::GetNextLeaf are just shortened versions of the one available here.
+ * @param[in,out] os Output stream to which data is written.
+ * @param[in] tree Reference to the QuadTree object to print.
+ * @returns An output stream to which information has been written.
+ * @note This method is unsuitable for post-analysis-ready output. Please refer
+ * to IOManager for this purpose.
+ */
 std::ostream& operator<<( std::ostream& os, const QuadTree& tree ) {
     os << "[TREE " << &tree << "] root_=" << tree.root_ << std::endl;
     Node* ptr(tree.root_);

@@ -76,6 +76,10 @@ class Node {
 double distance( const Node& n1, const Node& n2 );
 double distance2( const Node& n1, const Node& n2 );
 
+/** @brief Class managing a quad-tree.
+ * @details Provides tree browsing and manipulation methods on top of the Node's
+ * implementation.
+ */
 class QuadTree {
     public:
         QuadTree( const SConfig& config );
@@ -90,6 +94,7 @@ class QuadTree {
         SError PruneNode( Node* ptr ) const;
         friend std::ostream& operator<<( std::ostream& os, const QuadTree& tree );
     private:
+        /// Pointer to the root of the tree.
         Node* root_;
 };
 
