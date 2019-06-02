@@ -131,6 +131,10 @@ bool Node::BelongsTo( Particle *p ) const {
     return false;
 }
 
+bool Node::IsEmpty() const {
+    return (this->com_ == NULL );
+}
+
 unsigned Node::GetQuadrant( Particle* p ) const {
     unsigned idx(0);
     // If particle in top quadrants, toggle zeroth bit.
@@ -151,6 +155,14 @@ unsigned Node::GetQuadrant( Node* n ) const {
 double Node::GetForce( unsigned dim ) const {
     /// @todo Delete this fucking mess.
     return com_->frc[dim];
+}
+
+short Node::ChildrenCount() const {
+    short nc(0);
+    for( unsigned ic(0); ic<4; ic++ )
+        if( this->children_[ic] != NULL )
+            nc++;
+    return nc;
 }
 
 SError Node::ResetForces() const {
@@ -355,6 +367,49 @@ SError QuadTree::RemoveParticle( Node* ptr ) const {
         delete ptr->com_;
     }
     ptr->com_ = NULL;
+    return E_SUCCESS;
+}
+
+SError QuadTree::PruneNode( Node* ptr ) const {
+    // Prune the Node like demanded
+    Node* n( ptr->GetParent() );
+    unsigned ic( ptr->GetIndex() % 4 );
+    delete n->children_[ic];
+    n->children_[ic] = NULL;
+    while( true ) {
+        if( n->ChildrenCount() != 1 ) {
+            break;
+        } else {
+            // Only one children remains in the parent of the pruned node. This
+            // child can be merged with its parent.
+            // One needs to care about the particles within the Nodes being
+            // fictive or not (id==-1) when performing this operation, so that
+            // that the output remains coherent.
+            Node* child( NULL );
+            // Find the remaining child.
+            for( ic=0; ic<4; ic++ ) {
+                if( n->children_[ic] != NULL ) {
+                    child = n->children_[ic];
+                    break;
+                }
+            }
+            // Check if the remaining node is  a leaf. If it is, we may drag it
+            // up one level. If not, multiple particles are enclosed close to
+            // one another at depper levels, so do not touch anything.
+            if( child->IsLeaf() ) {
+                // Swap contained particle pointers (move the leaf particle to the
+                // parent).
+                std::swap( n->com_, child->com_ );
+                // Delete the remaining only child
+                delete n->children_[ic];
+                n->children_[ic] = NULL;
+                // Get the parent and perform the same checks again
+                n = n->GetParent();
+            } else {
+                break;
+            }
+        }
+    }
     return E_SUCCESS;
 }
 

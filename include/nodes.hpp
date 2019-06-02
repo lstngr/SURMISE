@@ -43,9 +43,11 @@ class Node {
         double GetWidth() const;
         double GetMass() const;
         bool BelongsTo( Particle *p ) const;
+        bool IsEmpty() const;
         unsigned GetQuadrant( Particle* p ) const;
         unsigned GetQuadrant( Node* n ) const;
         double GetForce( unsigned dim ) const;
+        short ChildrenCount() const;
         SError ResetForces() const;
         SError Interact( const Node& other ) const;
         friend class QuadTree;
@@ -79,6 +81,7 @@ class QuadTree {
         SError AddParticle( Particle* p ) const;
         SError AddParticle( std::vector<Particle*> p ) const;
         SError RemoveParticle( Node* ptr ) const;
+        SError PruneNode( Node* ptr ) const;
         friend std::ostream& operator<<( std::ostream& os, const QuadTree& tree );
     private:
         Node* root_;

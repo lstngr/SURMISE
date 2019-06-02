@@ -22,22 +22,27 @@ function out=read_output( filename )
 % Where M,N known integers (particle count and parameter number)
 % === ==== ===
 
-data = csvread(filename);
+allfiles = dir([filename,'.leafs.*']);
+
+data = csvread([allfiles(1).folder,'/',allfiles(1).name]);
 pnum = max(data(:,1)) + 1;
 disp([num2str(pnum),' particles found'])
-out = cell(1,pnum);
-for ip=1:pnum
-    out{ip} = struct('mass',0.0,'xpos',[],'ypos',[],'xvel',[],'yvel',[],'xfrc',[],'yfrc',[]);
-end
-for il=1:size(data,1)
-    if(out{data(il,1)+1}.mass==0)
-        out{data(il,1)+1}.mass = data(il,2);
+out = zeros(length(allfiles),pnum,7);
+% Indexes of out refer to
+% - time step
+% - particle index
+% - variable of interest (mass, pos_x/y, vel_x/y, frc_x/y)
+
+for ifile=1:length(allfiles)
+    for il=1:size(data,1)
+        data = csvread([allfiles(ifile).folder,'/',allfiles(ifile).name]);
+        out(ifile,data(il,1)+1,1:7) = data(il,2:8);
+%         out(ifile,data(il,1)+1,2) = data(il,3);
+%         out(ifile,data(il,1)+1,3) = data(il,4);
+%         out(ifile,data(il,1)+1,4) = data(il,5);
+%         out(ifile,data(il,1)+1,5) = data(il,6);
+%         out(ifile,data(il,1)+1,6) = data(il,7);
+%         out(ifile,data(il,1)+1,7) = data(il,8);
     end
-    out{data(il,1)+1}.xpos(end+1) = data(il,3);
-    out{data(il,1)+1}.ypos(end+1) = data(il,4);
-    out{data(il,1)+1}.xvel(end+1) = data(il,5);
-    out{data(il,1)+1}.yvel(end+1) = data(il,6);
-    out{data(il,1)+1}.xfrc(end+1) = data(il,7);
-    out{data(il,1)+1}.yfrc(end+1) = data(il,8);
 end
 end
