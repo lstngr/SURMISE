@@ -3,12 +3,28 @@
 #include "nodes.hpp"
 #include "config_file.hpp"
 
+/** Initializes a I/O manager. The constructor sets the iteration counter of the
+ * class, and calls an auxilary function to read the data provided in the
+ * argument string.
+ * @param[in] input_path Path to the configuration of the program. Note this
+ * input path does not refer to any file. The function GenerateConfig will
+ * append the expected extensions `.conf` and `.init` to it.
+ */
 IOManager::IOManager( std::string input_path )
     :write_iter(0)
 {
     GenerateConfig( input_path );
 }
 
+/** For a given Simulation object, writes the required data to output files.
+ * These are formatted using the CSV format.
+ * @param[in] sim Reference to the Simulation object containing the simulated
+ * system. This obbject likely called the current method and passed itself by
+ * reference.
+ * @note In the current implementation, the user has no control about the output
+ * (except the path it is written in). Future versions may allow selecting which
+ * data is output, as well as the output frequency.
+ */
 SError IOManager::WriteOutput( const Simulation& sim ) {
     std::ofstream particles, tree;
     OpenStream( particles, conf_.opath + ".leafs." + std::to_string(write_iter) );
@@ -83,10 +99,27 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
     return E_SUCCESS;
 }
 
+/** Returns a constant reference to the current configuration.
+ * Since we expect that the configuration object is initialized in the
+ * constructor, no verification is performed before communicating it.
+ */
 const SConfig& IOManager::GetConfig() const {
     return conf_;
 }
 
+/** @brief Given an input path, creates a configuration corresponding to the
+ * requested parameters.
+ * @details This function is private and called by the constructor of the class
+ * at initialization. It expects a path ending with the name of the simulation
+ * to be run. Say this path reads `input/sim`, the function will look for the
+ * files `input/sim.conf` and `input/sim.init` containing key-value parameters
+ * and initial conditions respectively. This function dynamically allocates
+ * memory for Particle objects that are read in the initial conditions file, but
+ * note the class is not repsonsible for managing them: the SConfig structure is
+ * responsible for destroying these when it reaches its end-of-life.
+ * @param[in] file String indicating the path where the configuration and
+ * initial conditions files can be found.
+ */
 SError IOManager::GenerateConfig( const std::string& file ) {
     std::string cfile( file+".conf" );
     std::string ifile( file+".init" );
@@ -122,11 +155,18 @@ SError IOManager::GenerateConfig( const std::string& file ) {
     return E_SUCCESS;
 }
 
+/** Wrapper function for opening a stream to an output file.
+ * @param[in,out] ofstrm Output stream to a file.
+ * @param[in] ofile Name of the file where the stream needs to point.
+ */
 SError IOManager::OpenStream( std::ofstream& ofstrm, const std::string& ofile ) const {
     ofstrm.open( ofile, std::ofstream::out );
     return E_SUCCESS;
 }
 
+/** Flushes an open stream and closes it.
+ * @param[in] ofstrm Stream pointing to an output file.
+ */
 SError IOManager::CloseStream( std::ofstream& ofstrm ) const {
     ofstrm.flush();
     ofstrm.close();
