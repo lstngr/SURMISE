@@ -48,9 +48,9 @@ struct SConfig {
     double max_wtime; //!< Maximum wall time allowed.
     double extra_time; //!< Extra time (substracted from max_wtime), allows exit routines to be performed peacefully.
     std::vector<Particle*> parts; //!< Particles to be simulated.
-    std::string ipath;
-    std::string opath;
-    double theta;
+    std::string ipath; //!< Input path to the configuration files.
+    std::string opath; //!< Output path where data should be written.
+    double theta; //!< Barnes-Hut "precision" parameter, controlling how coarse the interaction between distant nodes should be.
 };
 
 #endif // SURMISE_STYPES

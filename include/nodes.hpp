@@ -70,7 +70,9 @@ class Node {
          * node.*/
         Particle* com_;
         /// Geometrical limits of the node's coverage (of physical space)
+        /**@{*/
         double left_,right_,top_,bottom_;
+        /**@}*/
 };
 
 double distance( const Node& n1, const Node& n2 );
@@ -84,6 +86,8 @@ class QuadTree {
     public:
         QuadTree( const SConfig& config );
         ~QuadTree();
+        /** Returns a pointer to the root of the tree.
+         */
         Node* GetRoot() const { return root_; }
         Node* GetNext( Node* ptr ) const;
         Node* GetDown( Node* ptr ) const;

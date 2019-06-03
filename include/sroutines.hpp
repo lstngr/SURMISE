@@ -21,8 +21,15 @@ class Simulation {
         SError UpdateTree() const;
         SError ComputeForces() const;
         SError TimeEvolution() const;
+        /** Reference to an input/output manager for configuration reading and
+         * data output.*/
         IOManager& io_;
+        /** Constant reference to the simulation configuration produced by the
+         * IOManager class. It contains all particles of the system, dynamically
+         * allocated by the input routines.*/
         const SConfig& conf_;
+        /** Pointer to a class containing a quad-tree. This tree will be by the
+         * Barnes-Hut algorithm.*/
         QuadTree* tree_;
 };
 

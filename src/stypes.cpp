@@ -14,12 +14,21 @@ SConfig::~SConfig() {
     destroy_vector(this->parts);
 }
 
+/** Copy operator for a particle.
+ * It preserves the index of the copied object.
+ * @param[in] other Constant reference to the copied object.
+ */
 Particle::Particle( const Particle& other )
     :Particle()
 {
     *this = other;
 }
 
+/** Assignement operator for particles.
+ * All properties are conserved, except for the index which is set to -1.
+ * @param[in] rhs Right-hand side member of the assignement operator.
+ * @returns A modified particle.
+ */
 Particle& Particle::operator=( const Particle& rhs ) {
     this->pos = rhs.pos;
     this->vel = rhs.vel;
@@ -32,6 +41,14 @@ Particle& Particle::operator=( const Particle& rhs ) {
     return *this;
 }
 
+/** @brief Adds a particle to the one on the left-hand side of the operator.
+ * @details The addition is performed as a center of mass computation, meaning
+ * that the LHS of the operator will be the center of mass of the system formed
+ * by the two masses. This function is helpful when building the tree and
+ * updating it.
+ * @param[in] other Particle to add to the left-hand side one.
+ * @returns A reference to the modified particle.
+ */
 Particle& Particle::operator+=( const Particle& other ) {
     double total_mass( this->mass + other.mass );
     this->pos[0] = ( this->mass * this->pos[0] + other.mass * other.pos[0] ) / total_mass;
@@ -44,6 +61,11 @@ Particle& Particle::operator+=( const Particle& other ) {
     return *this;
 }
 
+/** Removes a particle from a center of mass.
+ * Has the opposite effect of the overloaded operator+=.
+ * @param[in] other Particle to remove from the center of mass.
+ * @returns A modified particle.
+ */
 Particle& Particle::operator-=( const Particle& other ) {
     double total_mass( this->mass - other.mass );
     this->pos[0] = ( this->mass * this->pos[0] - other.mass * other.pos[0] ) / total_mass;
