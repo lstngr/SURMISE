@@ -48,14 +48,13 @@ struct SConfig {
     double dsize; //!< Domain size (square region's edge)
     unsigned int npart; //!< Number of Particles
     double dt; //!< Time step for temporal evolution.
-    double epsilon; //!< Precision for the Fast Multipole Method
+    double theta; //!< Barnes-Hut "precision" parameter, controlling how coarse the interaction between distant nodes should be.
     unsigned int max_iter; //!< Maximum number of iterations.
     double max_wtime; //!< Maximum wall time allowed.
     double extra_time; //!< Extra time (substracted from max_wtime), allows exit routines to be performed peacefully.
     std::vector<Particle*> parts; //!< Particles to be simulated.
     std::string ipath; //!< Input path to the configuration files.
     std::string opath; //!< Output path where data should be written.
-    double theta; //!< Barnes-Hut "precision" parameter, controlling how coarse the interaction between distant nodes should be.
 };
 
 #endif // SURMISE_STYPES

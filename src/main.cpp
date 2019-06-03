@@ -16,6 +16,7 @@ int main( int argc, char** argv ){
     // Run simulation
     IOManager io( argv[1] );
     Simulation sim( io );
+    MPI_Barrier( MPI_COMM_WORLD );
     sim.Run();
     /* ---------------------------- */
     // Free MPI_Particle type.

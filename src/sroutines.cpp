@@ -43,7 +43,10 @@ Simulation::~Simulation() {
  * @returns An error code.
  */
 SError Simulation::Run() {
-    std::cout << "SURMISE run begins." << std::endl;
+    int rank;
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    if( rank==0 )
+        std::cout << "SURMISE run begins." << std::endl;
     int me,sz;
     MPI_Comm_rank( MPI_COMM_WORLD, &me );
     MPI_Comm_size( MPI_COMM_WORLD, &sz );
@@ -62,7 +65,6 @@ SError Simulation::Run() {
  * @returns An error code.
  */
 SError Simulation::BuildTree() {
-    std::cout << "Starting tree decomposition." << std::endl;
     tree_ = new QuadTree( conf_ );
     tree_->AddParticle( conf_.parts );
     return E_SUCCESS;

@@ -1,3 +1,4 @@
+#include <mpi.h>
 #include "iomanager.hpp"
 #include "sroutines.hpp"
 #include "nodes.hpp"
@@ -13,7 +14,15 @@
 IOManager::IOManager( std::string input_path )
     :write_iter(0)
 {
-    GenerateConfig( input_path );
+    int rank;
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    if( rank==0 ) {
+        std::cout << "CPU" << rank << " reads config..." << std::endl;
+        GenerateConfig( input_path );
+        std::cout << "CPU" << rank << " done reading!" << std::endl;
+    }
+    MPI_Barrier( MPI_COMM_WORLD );
+    this->BroadcastConfig();
 }
 
 /** For a given Simulation object, writes the required data to output files.
@@ -152,6 +161,36 @@ SError IOManager::GenerateConfig( const std::string& file ) {
         conf_.parts.back()->frc[1] = 0.0;
     }
     ifsp.close();
+    return E_SUCCESS;
+}
+
+SError IOManager::BroadcastConfig() {
+    // Define buffers for (unsigned int) values of SConfig
+    unsigned uv[2];
+    double   dv[5];
+    int rank;
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    if( rank==0 ) {
+        uv[0] = conf_.npart;
+        uv[1] = conf_.max_iter;
+        dv[0] = conf_.dsize;
+        dv[1] = conf_.dt;
+        dv[2] = conf_.theta;
+        dv[3] = conf_.max_wtime;
+        dv[4] = conf_.extra_time;
+        std::cout << "CPU" << rank << " broadcasts configuration." << std::endl;
+    }
+    MPI_Bcast( &uv, 2, MPI_UNSIGNED, 0, MPI_COMM_WORLD );
+    MPI_Bcast( &dv, 5, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+    if( rank>0 ) {
+        conf_.dsize = dv[0];
+        conf_.npart = uv[0];
+        conf_.theta = dv[2];
+        conf_.max_iter = uv[1];
+        conf_.max_wtime= dv[3];
+        conf_.extra_time=dv[4];
+        std::cout << "CPU" << rank << " received configuration." << std::endl;
+    }
     return E_SUCCESS;
 }
 

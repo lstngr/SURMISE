@@ -26,6 +26,7 @@ class IOManager {
         const SConfig& GetConfig() const;
     private:
         SError GenerateConfig( const std::string& file );
+        SError BroadcastConfig();
         SError OpenStream( std::ofstream& ofstrm, const std::string& ofile ) const;
         SError CloseStream( std::ofstream& ofstrm ) const;
         SConfig conf_; //!< Object containing the parameters of the simulation.
