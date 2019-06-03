@@ -28,3 +28,7 @@ tags
 /Report/**/*.gz
 # Jupyter shitty extensions
 .ipynb_checkpoints
+# SLURM
+*.log
+*.slog
+slurm-*
