@@ -44,30 +44,6 @@ int main( int argc, char** argv ){
         MPI_Particle = MPI_Particle_NR;
     }
     MPI_Type_commit( &MPI_Particle );
-    
-    std::cout << "MPI_Particle Datatype setup:" << std::endl
-        << "(Size,LowerBound,Extent)=(" << sz << "," << ext << "," << lb << ")" << std::endl;
-
-    int me,size;
-    MPI_Comm_rank( MPI_COMM_WORLD, &me );
-    MPI_Comm_size( MPI_COMM_WORLD, &size);
-    Particle p[20];
-    if( not (size<2) ) {
-        if( me == 0 ) {
-            for( auto& pn : p )
-                pn.pos={10.,10.};
-            std::cout << "CPU[" << me << "] sending 20xParticle with pos=(" <<
-                p[0].pos[0] << "," << p[0].pos[1] << ") to CPU1." << std::endl;
-            MPI_Send( &p, 20, MPI_Particle, 1, 0, MPI_COMM_WORLD );
-        } else if ( me == 1 ) {
-            MPI_Status status;
-            std::cout << "CPU[" << me << "] waits for message from CPU0." <<
-                std::endl;
-            MPI_Recv( &p, 20, MPI_Particle, 0, 0, MPI_COMM_WORLD, &status );
-            std::cout << "CPU[" << me << "] received 20xParticle with pos=(" <<
-                p[0].pos[0] << "," << p[0].pos[1] << ") from CPU0." << std::endl;
-        }
-    }
     /* ---------------------------- */
     // Run simulation
     IOManager io( argv[1] );
