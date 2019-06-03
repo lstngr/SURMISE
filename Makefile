@@ -1,7 +1,8 @@
 TARGET=surmise
 export DOXY_VERSION=$(shell git describe --abbrev=8 --dirty --always --tags)
+export OMPI_CXX=clang++
 
-CXX=clang++
+CXX=mpic++
 CXXFLAGS=-std=c++11 -g -Wall -pedantic -O0 -D_GLIBCXX_DEBUG #-fno-stack-protector
 LDFLAGS=
 LDLIBS=
