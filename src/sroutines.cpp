@@ -47,17 +47,6 @@ SError Simulation::Run() {
     int me,sz;
     MPI_Comm_rank( MPI_COMM_WORLD, &me );
     MPI_Comm_size( MPI_COMM_WORLD, &sz );
-    Particle p;
-    p.id=69;
-    if( sz>1 ) {
-        if( me==0 ){
-            std::cout << "Can CPU0 send Particle " << p.id << "?" << std::endl;
-            MPI_Send( &p, 1, MPI_Particle, 1, 0, MPI_COMM_WORLD );
-        } else if( me==1 ) {
-            std::cout << "Yes it can!" << std::endl;
-        }
-    }
-    return E_SUCCESS;
     BuildTree();
     for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
         ComputeForces();
