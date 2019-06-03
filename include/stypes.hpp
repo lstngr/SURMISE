@@ -9,6 +9,7 @@
 #include <vector>
 #include <array>
 #include <iostream>
+#include <mpi.h>
 
 /** Describes a particle in space. Contains relevant informations to
  * itself (position, velocity, mass) as well as flags set by the domain classes.
@@ -29,6 +30,10 @@ Particle operator+( Particle lhs, const Particle& rhs );
 Particle operator-( Particle lhs, const Particle& rhs );
 std::ostream& operator<<( std::ostream& os, const Particle& p );
 std::array<double,2> pp_force( const Particle& p1, const Particle& p2 );
+
+extern MPI_Datatype MPI_Particle;
+void make_mpi_types();
+void free_mpi_types();
 
 /** @brief Structure containing the simulation parameters.
  * @details Will be read by the root MPI process and passed to other instances

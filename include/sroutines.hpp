@@ -5,10 +5,13 @@
 #ifndef SURMISE_SROUTINES_HPP_
 #define SURMISE_SROUTINES_HPP_
 
+#include <mpi.h>
 #include "stypes.hpp"
 #include "iomanager.hpp"
 #include "nodes.hpp"
 #include "serrors.hpp"
+
+extern MPI_Datatype MPI_Particle;
 
 class Simulation {
     public:
