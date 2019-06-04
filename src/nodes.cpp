@@ -505,7 +505,7 @@ SError QuadTree::AddParticle( Particle* p ) const {
 /** This method insert multiple particles, one after the other in the tree.
  */
 SError QuadTree::AddParticle( std::vector<Particle*> p ) const {
-    for( auto ap : p )
+    for( auto& ap : p )
         this->AddParticle( ap );
     return E_SUCCESS;
 }

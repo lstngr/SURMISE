@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 #include "sroutines.hpp"
 
 /** Instantiates a Simulation object. This class requires an input/output
@@ -43,19 +44,22 @@ Simulation::~Simulation() {
  * @returns An error code.
  */
 SError Simulation::Run() {
-    int rank;
+    int rank,size;
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    MPI_Comm_size( MPI_COMM_WORLD, &size );
     if( rank==0 )
         std::cout << "SURMISE run begins." << std::endl;
-    int me,sz;
-    MPI_Comm_rank( MPI_COMM_WORLD, &me );
-    MPI_Comm_size( MPI_COMM_WORLD, &sz );
     BuildTree();
+    // Distribute tree
     for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
+        // RequestNodes
         ComputeForces();
         TimeEvolution();
+        // Sync Leafs, includes gathering to master
         UpdateTree();
         io_.WriteOutput( *this );
+        // If sufficient unbalancing, master gathers particles, builds tree and
+        // distributes again
     }
     return E_SUCCESS;
 }
@@ -201,6 +205,41 @@ SError Simulation::TimeEvolution() const {
         p->vel[0] += p->frc[0] / p->mass * conf_.dt;
         p->vel[1] += p->frc[1] / p->mass * conf_.dt;
         leaf = tree_->GetNextLeaf( leaf );
+    }
+    return E_SUCCESS;
+}
+
+SError Simulation::DistributeTree() const {
+    int rank,size;
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    MPI_Comm_size( MPI_COMM_WORLD, &size );
+    // Compute buffer sizes for particle transfer
+    int bsize[2];
+    // Implement uniform distribution of particles to start with
+    bsize[0] = std::floor( (double)conf_.npart / (double)size );
+    bsize[1] = bsize[0] + conf_.npart%size;
+    if( rank==0 ) {
+        std::cout << "CPU" << rank <<
+            " sends (nudes) particles that other CPU should expect."
+            << std::endl;
+        unsigned ip(1); // Index of receiving CPU
+        Node *ptr( tree_->GetNextLeaf( tree_->GetRoot() ) );
+        while( ip<size ){
+            unsigned send_size(bsize[ip==size-1]);
+            Particle buf[send_size];
+            unsigned pidx(0);
+            while( ptr != NULL and pidx<send_size ){
+                ///@todo Fix this absolute bullshit. We precisely implemented
+                //the operator= to remove the identifier.
+                unsigned pid( ptr->GetParticle()->id );
+                buf[pidx] = *(ptr->GetParticle());
+                buf[pidx].id = pid;
+                ptr = tree_->GetNextLeaf( ptr );
+                pidx++;
+            }
+            MPI_Isend( buf, send_size, MPI_Particle, ip, 0, MPI_COMM_WORLD, NULL );
+            ip++;
+        }
     }
     return E_SUCCESS;
 }
