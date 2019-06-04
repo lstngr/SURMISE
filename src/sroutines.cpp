@@ -50,7 +50,8 @@ SError Simulation::Run() {
     if( rank==0 )
         std::cout << "SURMISE run begins." << std::endl;
     BuildTree();
-    // Distribute tree
+    DistributeTree();
+    MPI_Barrier( MPI_COMM_WORLD );
     for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
         // RequestNodes
         ComputeForces();
@@ -230,16 +231,24 @@ SError Simulation::DistributeTree() const {
             unsigned pidx(0);
             while( ptr != NULL and pidx<send_size ){
                 ///@todo Fix this absolute bullshit. We precisely implemented
-                //the operator= to remove the identifier.
+                ///the operator= to remove the identifier.
                 unsigned pid( ptr->GetParticle()->id );
                 buf[pidx] = *(ptr->GetParticle());
                 buf[pidx].id = pid;
                 ptr = tree_->GetNextLeaf( ptr );
                 pidx++;
             }
-            MPI_Isend( buf, send_size, MPI_Particle, ip, 0, MPI_COMM_WORLD, NULL );
+            MPI_Request req;
+            MPI_Isend( buf, send_size, MPI_Particle, ip, 0, MPI_COMM_WORLD, &req );
             ip++;
         }
+    } else {
+        // File requests to get Particles
+        unsigned recv_size(bsize[rank==size-1]);
+        Particle buf[recv_size];
+        MPI_Status s;
+        MPI_Recv( buf, recv_size, MPI_Particle, 0, 0, MPI_COMM_WORLD, &s );
+        std::cout << "CPU" << rank << " received " << bsize[rank==size-1] << " particles from CPU0." << std::endl;
     }
     return E_SUCCESS;
 }
