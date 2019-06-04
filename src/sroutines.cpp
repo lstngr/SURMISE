@@ -223,8 +223,10 @@ SError Simulation::DistributeTree() const {
         std::cout << "CPU" << rank <<
             " sends (nudes) particles that other CPU should expect."
             << std::endl;
-        unsigned ip(1); // Index of receiving CPU
         Node *ptr( tree_->GetNextLeaf( tree_->GetRoot() ) );
+        for( unsigned iskip(0); iskip<bsize[0]; iskip++ )
+            ptr = tree_->GetNextLeaf( ptr );
+        unsigned ip(1); // Starting index of receiving CPU
         while( ip<size ){
             unsigned send_size(bsize[ip==size-1]);
             Particle buf[send_size];
