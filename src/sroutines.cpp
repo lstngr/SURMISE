@@ -50,7 +50,7 @@ SError Simulation::Run() {
     if( rank==0 )
         std::cout << "SURMISE run begins." << std::endl;
     BuildTree();
-    DistributeTree();
+    io_.DistributeTree(*this);
     MPI_Barrier( MPI_COMM_WORLD );
     for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
         // RequestNodes
@@ -206,51 +206,6 @@ SError Simulation::TimeEvolution() const {
         p->vel[0] += p->frc[0] / p->mass * conf_.dt;
         p->vel[1] += p->frc[1] / p->mass * conf_.dt;
         leaf = tree_->GetNextLeaf( leaf );
-    }
-    return E_SUCCESS;
-}
-
-SError Simulation::DistributeTree() const {
-    int rank,size;
-    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    MPI_Comm_size( MPI_COMM_WORLD, &size );
-    // Compute buffer sizes for particle transfer
-    int bsize[2];
-    // Implement uniform distribution of particles to start with
-    bsize[0] = std::floor( (double)conf_.npart / (double)size );
-    bsize[1] = bsize[0] + conf_.npart%size;
-    if( rank==0 ) {
-        std::cout << "CPU" << rank <<
-            " sends (nudes) particles that other CPU should expect."
-            << std::endl;
-        Node *ptr( tree_->GetNextLeaf( tree_->GetRoot() ) );
-        for( unsigned iskip(0); iskip<bsize[0]; iskip++ )
-            ptr = tree_->GetNextLeaf( ptr );
-        unsigned ip(1); // Starting index of receiving CPU
-        while( ip<size ){
-            unsigned send_size(bsize[ip==size-1]);
-            Particle buf[send_size];
-            unsigned pidx(0);
-            while( ptr != NULL and pidx<send_size ){
-                ///@todo Fix this absolute bullshit. We precisely implemented
-                ///the operator= to remove the identifier.
-                unsigned pid( ptr->GetParticle()->id );
-                buf[pidx] = *(ptr->GetParticle());
-                buf[pidx].id = pid;
-                ptr = tree_->GetNextLeaf( ptr );
-                pidx++;
-            }
-            MPI_Request req;
-            MPI_Isend( buf, send_size, MPI_Particle, ip, 0, MPI_COMM_WORLD, &req );
-            ip++;
-        }
-    } else {
-        // File requests to get Particles
-        unsigned recv_size(bsize[rank==size-1]);
-        Particle buf[recv_size];
-        MPI_Status s;
-        MPI_Recv( buf, recv_size, MPI_Particle, 0, 0, MPI_COMM_WORLD, &s );
-        std::cout << "CPU" << rank << " received " << bsize[rank==size-1] << " particles from CPU0." << std::endl;
     }
     return E_SUCCESS;
 }

@@ -24,6 +24,7 @@ class IOManager {
         IOManager( std::string input_path );
         SError WriteOutput( const Simulation& sim );
         const SConfig& GetConfig() const;
+        SError DistributeTree( const Simulation& sim );
     private:
         SError GenerateConfig( const std::string& file );
         SError BroadcastConfig();

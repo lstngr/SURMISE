@@ -1,3 +1,4 @@
+#include <cmath>
 #include <mpi.h>
 #include "iomanager.hpp"
 #include "sroutines.hpp"
@@ -114,6 +115,84 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
  */
 const SConfig& IOManager::GetConfig() const {
     return conf_;
+}
+
+SError IOManager::DistributeTree( const Simulation& sim ) {
+    int rank,size;
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    MPI_Comm_size( MPI_COMM_WORLD, &size );
+    // Compute buffer sizes for particle transfer
+    int bsize[2];
+    // Implement uniform distribution of particles to start with
+    bsize[0] = std::floor( (double)conf_.npart / (double)size );
+    bsize[1] = bsize[0] + conf_.npart%size;
+    if( rank==0 ) {
+        std::cout << "CPU" << rank
+            << " sends particles that other CPU should expect."
+            << std::endl;
+        Node *ptr( sim.tree_->GetNextLeaf( sim.tree_->GetRoot() ) );
+        for( unsigned iskip(0); iskip<bsize[0]; iskip++ ) {
+            std::cout << "  " << rank << ": Skipping " << *(ptr->GetParticle())
+                << std::endl;
+            ptr = sim.tree_->GetNextLeaf( ptr );
+        }
+        unsigned ip(1); // Starting index of receiving CPU
+        while( ip<size ){
+            unsigned send_size(bsize[ip==size-1]);
+            Particle buf[send_size];
+            unsigned pidx(0);
+            while( ptr != NULL and pidx<send_size ){
+                ///@todo Fix this absolute bullshit. We precisely implemented
+                ///the operator= to remove the identifier.
+                unsigned pid( ptr->GetParticle()->id );
+                buf[pidx] = *(ptr->GetParticle());
+                buf[pidx].id = pid;
+                std::cout << "  " << rank << ": Buffering " << buf[pidx]
+                    << std::endl;
+                ptr = sim.tree_->GetNextLeaf( ptr );
+                pidx++;
+            }
+            MPI_Request req;
+            MPI_Isend( buf, send_size, MPI_Particle, ip, 0,
+                    MPI_COMM_WORLD, &req );
+            ip++;
+        }
+    } else {
+        // File requests to get Particles
+        unsigned recv_size(bsize[rank==size-1]);
+        Particle buf[recv_size];
+        MPI_Status s;
+        MPI_Recv( buf, recv_size, MPI_Particle, 0, 0, MPI_COMM_WORLD, &s );
+        std::cout << "CPU" << rank << " received " << bsize[rank==size-1] << " particles from CPU0." << std::endl;
+        for( auto& part : buf ) {
+            std::cout << "  " << rank << ": " << part << std::endl;
+            Particle* newpart = new Particle(part);
+            conf_.parts.push_back( newpart );
+        }
+    }
+    // Delete removed particles from process zero
+    MPI_Barrier( MPI_COMM_WORLD );
+    if( rank==0 ) {
+        std::cout << "Deleting memory from CPU0." << std::endl;
+        Node* ptr( sim.tree_->GetNextLeaf( sim.tree_->GetRoot() ) );
+        for( unsigned iskip(0); iskip<bsize[0]; iskip++ )
+            ptr = sim.tree_->GetNextLeaf( ptr );
+        while( ptr != NULL ) {
+            std::cout << "  " << rank << ": Removing from memory " <<
+                *(ptr->GetParticle()) << std::endl;
+            std::vector<Particle*>::iterator it( conf_.parts.begin() );
+            while( it != conf_.parts.end() ) {
+                if( (*it)->id == ptr->GetParticle()->id ) {
+                    delete *it;
+                    conf_.parts.erase( it );
+                    break;
+                }
+                it++;
+            }
+            ptr = sim.tree_->GetNextLeaf( ptr );
+        }
+    }
+    return E_SUCCESS;
 }
 
 /** @brief Given an input path, creates a configuration corresponding to the

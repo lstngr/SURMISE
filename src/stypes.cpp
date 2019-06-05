@@ -29,15 +29,15 @@ void make_mpi_types() {
     disp[2] = offsetof( Particle, frc );
     disp[3] = offsetof( Particle, mass);
     disp[4] = offsetof( Particle, id  );
-    MPI_Type_create_struct( 2, blocklen, disp, ptypes, &MPI_Particle_NR );
+    MPI_Type_create_struct( 5, blocklen, disp, ptypes, &MPI_Particle_NR );
     // NOTE: Doubles and longs have different alignement (double have 8 bytes,
     // while long only four), such that the compiler might add a four byte
     // padding at the end of the struct. We resize it (will also allow to send
     // multiple particles at once).
     int sz;
-    MPI_Aint lb,ext;
+    // MPI_Aint lb,ext;
     MPI_Type_size( MPI_Particle_NR, &sz );
-    MPI_Type_get_extent( MPI_Particle_NR, &lb, &ext );
+    // MPI_Type_get_extent( MPI_Particle_NR, &lb, &ext );
     if(sz != sizeof( Particle )) {
         MPI_Type_create_resized( MPI_Particle_NR,
                 0,
