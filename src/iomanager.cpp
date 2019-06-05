@@ -162,20 +162,11 @@ SError IOManager::SyncLeafs( Simulation& sim ) {
     unsigned bsize(0), *bsizes, ib(0);
     Particle *recv_buf, *send_buf;
     bsizes = new unsigned[size];
-    std::cout << "CPU" << rank << ": ";
     for(unsigned i(0); i<conf_.npart; i++){
-        std::cout << sim.update_list_[i] << " ";
         if( sim.update_list_[i] )
             bsize++;
     }
-    std::cout << std::endl;
     MPI_Allgather( &bsize, 1, MPI_UNSIGNED, bsizes, 1, MPI_UNSIGNED, MPI_COMM_WORLD );
-    if(rank==0){
-        std::cout << "Sync got leafs nums ";
-        for( unsigned i(0); i<size; i++ )
-            std::cout << bsizes[i] << " ";
-        std::cout << std::endl;
-    }
     send_buf = new Particle[bsize];
     for(unsigned i(0); i<conf_.npart; i++){
         if( sim.update_list_[i] ){
@@ -184,15 +175,11 @@ SError IOManager::SyncLeafs( Simulation& sim ) {
             ib++;
         }
     }
-    std::cout << "Whos there? CPU" << rank << " is!" << std::endl;
-    for( unsigned i(0); i<bsize; i++ )
-        std::cout << "  " << send_buf[i] << std::endl;
     MPI_Barrier( MPI_COMM_WORLD );
     MPI_Request send_req[size];
     for( unsigned i(0); i<size; i++ ){
         if( i!=rank ){
             MPI_Isend( &send_buf, bsizes[rank], MPI_Particle, i, 0, MPI_COMM_WORLD, &send_req[i] );
-            std::cout << "CPU" << rank << " sent " << bsizes[rank] << " particles to CPU" << i << "." << std::endl;
         }
     }
     MPI_Barrier( MPI_COMM_WORLD );
@@ -200,10 +187,8 @@ SError IOManager::SyncLeafs( Simulation& sim ) {
         if( i!=rank ){
             recv_buf = new Particle[bsizes[i]];
             MPI_Status stat;
-            std::cout << "CPU" << rank << " waits for " << bsizes[i] << " particles from CPU" << i << "." << std::endl;
             MPI_Recv( recv_buf, bsizes[i], MPI_Particle, i, 0, MPI_COMM_WORLD,
                     &stat );
-            std::cout << "CPU" << rank << " gets " << bsizes[i] << " particles from CPU" << i << "." << std::endl;
             for( unsigned is(0); is<bsizes[i]; is++ ) {
                 unsigned identifier( recv_buf[is].id );
                 for( auto& pp : conf_.parts ) {
