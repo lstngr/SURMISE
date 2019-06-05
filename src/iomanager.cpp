@@ -167,6 +167,7 @@ SError IOManager::DistributeTree( const Simulation& sim ) {
         for( auto& part : buf ) {
             std::cout << "  " << rank << ": " << part << std::endl;
             Particle* newpart = new Particle(part);
+            newpart->id = part.id;
             conf_.parts.push_back( newpart );
         }
     }

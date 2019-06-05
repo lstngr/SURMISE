@@ -52,9 +52,17 @@ SError Simulation::Run() {
     BuildTree();
     io_.DistributeTree(*this);
     MPI_Barrier( MPI_COMM_WORLD );
-    if( tree_!=NULL )
+    if( tree_!=NULL ){
         delete tree_;
-    tree_=NULL;
+        tree_ = NULL;
+    }
+    // Building local tree
+    BuildTree();
+    for( unsigned ip(0); ip<size; ip++ ){
+        if( rank==ip )
+            std::cout << *tree_ << std::endl;
+        MPI_Barrier( MPI_COMM_WORLD );
+    }
     return E_SUCCESS;
     for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
         // RequestNodes
