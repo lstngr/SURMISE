@@ -117,6 +117,27 @@ const SConfig& IOManager::GetConfig() const {
     return conf_;
 }
 
+SError IOManager::DistributeParticles( const Simulation& sim ) {
+    int rank,size;
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    MPI_Comm_size( MPI_COMM_WORLD, &size );
+    Particle buf[conf_.npart];
+    if( rank==0 ) {
+        for( unsigned ip(0); ip<conf_.npart; ip++ ) {
+            buf[ip] = *(conf_.parts[ip]);
+            buf[ip].id = conf_.parts[ip]->id;
+        }
+    }
+    MPI_Bcast( &buf, conf_.npart, MPI_Particle, 0, MPI_COMM_WORLD );
+    if( rank>0 ) {
+        for( const auto& p : buf ) {
+            conf_.parts.push_back( new Particle(p) );
+            conf_.parts.back()->id = p.id;
+        }
+    }
+    return E_SUCCESS;
+}
+
 SError IOManager::DistributeTree( const Simulation& sim ) {
     int rank,size;
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );

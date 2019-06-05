@@ -49,15 +49,9 @@ SError Simulation::Run() {
     MPI_Comm_size( MPI_COMM_WORLD, &size );
     if( rank==0 )
         std::cout << "SURMISE run begins." << std::endl;
+    io_.DistributeParticles(*this);
     BuildTree();
-    io_.DistributeTree(*this);
     MPI_Barrier( MPI_COMM_WORLD );
-    if( tree_!=NULL ){
-        delete tree_;
-        tree_ = NULL;
-    }
-    // Building local tree
-    BuildTree();
     for( unsigned ip(0); ip<size; ip++ ){
         if( rank==ip )
             std::cout << *tree_ << std::endl;
