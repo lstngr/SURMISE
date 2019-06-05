@@ -52,6 +52,10 @@ SError Simulation::Run() {
     BuildTree();
     io_.DistributeTree(*this);
     MPI_Barrier( MPI_COMM_WORLD );
+    if( tree_!=NULL )
+        delete tree_;
+    tree_=NULL;
+    return E_SUCCESS;
     for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
         // RequestNodes
         ComputeForces();

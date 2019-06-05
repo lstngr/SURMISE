@@ -189,6 +189,10 @@ SError IOManager::DistributeTree( const Simulation& sim ) {
                 }
                 it++;
             }
+            // We need to remove the pointer since it points to a deleted
+            // object. Else, the Node destructor will try to access it and a
+            // segmentation fault will occur.
+            ptr->com_ = NULL;
             ptr = sim.tree_->GetNextLeaf( ptr );
         }
     }
