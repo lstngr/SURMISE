@@ -143,17 +143,40 @@ SError IOManager::DistributeParticles( Simulation& sim ) {
     Node* ptr( sim.tree_->GetNextLeaf( sim.tree_->GetRoot() ) );
     unsigned ic(0);
     while(ptr!=NULL) {
-        unsigned ip(ptr->GetParticle()->id); 
-        if(rank*upsize[0] <= ic and (rank+1)*upsize[0] > ic and rank<size-1) { 
-            std::cout << "CPU" << rank << " takes id=" << ip << std::endl;
+        unsigned ip(ptr->GetParticle()->id);
+        sim.update_list_[ip]=false;
+        if(rank*upsize[0] <= ic and (rank+1)*upsize[0] > ic and rank<size-1) {
             sim.update_list_[ip] = true;
-        } else if( ic>=conf_.npart-upsize[1] and rank==size-1 ) {
-            std::cout << "CPU" << rank << " takes id=" << ip << std::endl;
+        } else if( ic>=rank*upsize[0] and rank==size-1 ) {
             sim.update_list_[ip] = true;
         }
         ptr = sim.tree_->GetNextLeaf( ptr );
         ic++;
     }
+    return E_SUCCESS;
+}
+
+SError IOManager::SyncLeafs( Simulation& sim ) {
+    int rank,size;
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    MPI_Comm_size( MPI_COMM_WORLD, &size );
+    unsigned bsize(0), *bsizes;
+    bsizes = new unsigned[size];
+    std::cout << "CPU" << rank << ": ";
+    for(unsigned i(0); i<conf_.npart; i++){
+        std::cout << sim.update_list_[i] << " ";
+        if( sim.update_list_[i] )
+            bsize++;
+    }
+    std::cout << std::endl;
+    MPI_Allgather( &bsize, 1, MPI_UNSIGNED, bsizes, 1, MPI_UNSIGNED, MPI_COMM_WORLD );
+    if(rank==0){
+        std::cout << "Sync got leafs nums ";
+        for( unsigned i(0); i<size; i++ )
+            std::cout << bsizes[i] << " ";
+        std::cout << std::endl;
+    }
+    delete[] bsizes;
     return E_SUCCESS;
 }
 

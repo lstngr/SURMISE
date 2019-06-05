@@ -26,6 +26,7 @@ class IOManager {
         const SConfig& GetConfig() const;
         SError DistributeParticles( Simulation& sim );
         SError DistributeTree( const Simulation& sim );
+        SError SyncLeafs( Simulation& sim );
     private:
         SError GenerateConfig( const std::string& file );
         SError BroadcastConfig();
