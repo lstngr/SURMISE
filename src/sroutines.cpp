@@ -54,15 +54,15 @@ SError Simulation::Run() {
     if( rank==0 )
         std::cout << "SURMISE run begins." << std::endl;
     io_.DistributeParticles(*this);
-    //BuildTree();
-    for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
+    for( unsigned iter(0); iter<conf_.max_iter; iter++ ) {
         ComputeForces();
         TimeEvolution();
         // Sync Leafs, includes gathering to master
         io_.SyncLeafs(*this);
-        return E_SUCCESS;
         UpdateTree();
-        io_.WriteOutput( *this );
+        if(rank==0)
+            io_.WriteOutput( *this );
+        MPI_Barrier( MPI_COMM_WORLD );
         // If sufficient unbalancing, recompute indicies.
         }
     return E_SUCCESS;

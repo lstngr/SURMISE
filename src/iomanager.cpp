@@ -65,9 +65,9 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
                 if( tptr->GetChild(ic) != NULL ) {
                     tptr = tptr->GetChild(ic);
                     tree << tptr << "," << tptr->children_[0] << ","
-                         << tptr->children_[1] << ","
-                         << tptr->children_[2] << ","
-                         << tptr->children_[3] << std::endl;
+                        << tptr->children_[1] << ","
+                        << tptr->children_[2] << ","
+                        << tptr->children_[3] << std::endl;
                     break;
                 }
             }
@@ -179,7 +179,8 @@ SError IOManager::SyncLeafs( Simulation& sim ) {
     MPI_Request send_req[size];
     for( unsigned i(0); i<size; i++ ){
         if( i!=rank ){
-            MPI_Isend( &send_buf, bsizes[rank], MPI_Particle, i, 0, MPI_COMM_WORLD, &send_req[i] );
+            MPI_Isend( send_buf, bsizes[rank], MPI_Particle, i, 0,
+                    MPI_COMM_WORLD, &send_req[i] );
         }
     }
     MPI_Barrier( MPI_COMM_WORLD );
@@ -191,7 +192,7 @@ SError IOManager::SyncLeafs( Simulation& sim ) {
                     &stat );
             for( unsigned is(0); is<bsizes[i]; is++ ) {
                 unsigned identifier( recv_buf[is].id );
-                for( auto& pp : conf_.parts ) {
+                for( const auto& pp : conf_.parts ) {
                     if( pp->id == identifier ) {
                         *pp = recv_buf[is];
                         pp->id = identifier;
@@ -327,10 +328,10 @@ SError IOManager::GenerateConfig( const std::string& file ) {
         conf_.parts.push_back( new Particle );
         conf_.parts.back()->id = ip;
         ifsp >> conf_.parts.back()->pos[0]
-             >> conf_.parts.back()->pos[1]
-             >> conf_.parts.back()->vel[0]
-             >> conf_.parts.back()->vel[1]
-             >> conf_.parts.back()->mass;
+            >> conf_.parts.back()->pos[1]
+            >> conf_.parts.back()->vel[0]
+            >> conf_.parts.back()->vel[1]
+            >> conf_.parts.back()->mass;
         conf_.parts.back()->frc[0] = 0.0;
         conf_.parts.back()->frc[1] = 0.0;
     }
@@ -359,13 +360,13 @@ SError IOManager::BroadcastConfig() {
     if( rank>0 ) {
         conf_.dsize = dv[0];
         conf_.npart = uv[0];
+        conf_.dt = dv[1];
         conf_.theta = dv[2];
         conf_.max_iter = uv[1];
         conf_.max_wtime= dv[3];
         conf_.extra_time=dv[4];
         std::cout << "CPU" << rank << " received configuration." << std::endl;
     }
-    std::cout << "CPU" << rank << " has npart=" << conf_.npart << std::endl;
     return E_SUCCESS;
 }
 
