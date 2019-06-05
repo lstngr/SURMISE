@@ -67,15 +67,13 @@ SError Simulation::Run() {
     }
     return E_SUCCESS;
     for( unsigned int iter(0); iter<conf_.max_iter; iter++ ) {
-        // RequestNodes
         ComputeForces();
         TimeEvolution();
         // Sync Leafs, includes gathering to master
         UpdateTree();
         io_.WriteOutput( *this );
-        // If sufficient unbalancing, master gathers particles, builds tree and
-        // distributes again
-    }
+        // If sufficient unbalancing, recompute indicies.
+        }
     return E_SUCCESS;
 }
 

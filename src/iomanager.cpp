@@ -135,15 +135,24 @@ SError IOManager::DistributeParticles( Simulation& sim ) {
             conf_.parts.back()->id = p.id;
         }
     }
+    sim.BuildTree();
     unsigned upsize[2];
     upsize[0] = std::floor( (double)conf_.npart / (double)size );
     upsize[1] = conf_.npart - (size-1)*upsize[0];
     sim.update_list_ = new bool[conf_.npart];
-    for( unsigned ip(0); ip<conf_.npart-upsize[1]; ip++ ) {
-        sim.update_list_[ip] = ( rank*upsize[0] <= ip and (rank+1)*upsize[0] > ip );
-    }
-    for(unsigned ip(conf_.npart-upsize[1]); ip<conf_.npart; ip++ ){
-        sim.update_list_[ip] = (rank==size-1);
+    Node* ptr( sim.tree_->GetNextLeaf( sim.tree_->GetRoot() ) );
+    unsigned ic(0);
+    while(ptr!=NULL) {
+        unsigned ip(ptr->GetParticle()->id); 
+        if(rank*upsize[0] <= ic and (rank+1)*upsize[0] > ic and rank<size-1) { 
+            std::cout << "CPU" << rank << " takes id=" << ip << std::endl;
+            sim.update_list_[ip] = true;
+        } else if( ic>=conf_.npart-upsize[1] and rank==size-1 ) {
+            std::cout << "CPU" << rank << " takes id=" << ip << std::endl;
+            sim.update_list_[ip] = true;
+        }
+        ptr = sim.tree_->GetNextLeaf( ptr );
+        ic++;
     }
     return E_SUCCESS;
 }
