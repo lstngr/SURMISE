@@ -117,7 +117,7 @@ const SConfig& IOManager::GetConfig() const {
     return conf_;
 }
 
-SError IOManager::DistributeParticles( const Simulation& sim ) {
+SError IOManager::DistributeParticles( Simulation& sim ) {
     int rank,size;
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
@@ -134,6 +134,16 @@ SError IOManager::DistributeParticles( const Simulation& sim ) {
             conf_.parts.push_back( new Particle(p) );
             conf_.parts.back()->id = p.id;
         }
+    }
+    unsigned upsize[2];
+    upsize[0] = std::floor( (double)conf_.npart / (double)size );
+    upsize[1] = conf_.npart - (size-1)*upsize[0];
+    sim.update_list_ = new bool[conf_.npart];
+    for( unsigned ip(0); ip<conf_.npart-upsize[1]; ip++ ) {
+        sim.update_list_[ip] = ( rank*upsize[0] <= ip and (rank+1)*upsize[0] > ip );
+    }
+    for(unsigned ip(conf_.npart-upsize[1]); ip<conf_.npart; ip++ ){
+        sim.update_list_[ip] = (rank==size-1);
     }
     return E_SUCCESS;
 }

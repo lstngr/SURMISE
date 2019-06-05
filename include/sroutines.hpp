@@ -34,6 +34,7 @@ class Simulation {
         /** Pointer to a class containing a quad-tree. This tree will be by the
          * Barnes-Hut algorithm.*/
         QuadTree* tree_;
+        bool* update_list_;
 };
 
 

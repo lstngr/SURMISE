@@ -8,7 +8,7 @@
  * @param[in] io Reference to an initialized IOManager.
  */
 Simulation::Simulation( IOManager& io )
-    :io_(io), conf_( io.GetConfig() )
+    :io_(io), conf_( io.GetConfig() ), tree_(NULL), update_list_(NULL)
 {}
 
 /** Destroys the simulation object by freeing up the QuadTree allocated by the
@@ -19,6 +19,10 @@ Simulation::~Simulation() {
     if(tree_!=NULL) {
         delete tree_;
         tree_ = NULL;
+    }
+    if(update_list_!=NULL) {
+        delete[] update_list_;
+        update_list_=NULL;
     }
 }
 
@@ -53,8 +57,12 @@ SError Simulation::Run() {
     BuildTree();
     MPI_Barrier( MPI_COMM_WORLD );
     for( unsigned ip(0); ip<size; ip++ ){
-        if( rank==ip )
-            std::cout << *tree_ << std::endl;
+        if( rank==ip ){
+            std::cout << *tree_ << "Update list: ";
+            for( unsigned u(0); u<conf_.npart; u++ )
+                std::cout << update_list_[u] << " ";
+            std::cout << std::endl << std::endl;
+        }
         MPI_Barrier( MPI_COMM_WORLD );
     }
     return E_SUCCESS;
