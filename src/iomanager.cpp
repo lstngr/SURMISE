@@ -22,7 +22,6 @@ IOManager::IOManager( std::string input_path )
         GenerateConfig( input_path );
         std::cout << "CPU" << rank << " done reading!" << std::endl;
     }
-    MPI_Barrier( MPI_COMM_WORLD );
     this->BroadcastConfig();
 }
 
@@ -160,7 +159,8 @@ SError IOManager::SyncLeafs( Simulation& sim ) {
     int rank,size;
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
-    unsigned bsize(0), *bsizes;
+    unsigned bsize(0), *bsizes, ib(0);
+    Particle *recv_buf, *send_buf;
     bsizes = new unsigned[size];
     std::cout << "CPU" << rank << ": ";
     for(unsigned i(0); i<conf_.npart; i++){
@@ -176,7 +176,49 @@ SError IOManager::SyncLeafs( Simulation& sim ) {
             std::cout << bsizes[i] << " ";
         std::cout << std::endl;
     }
+    send_buf = new Particle[bsize];
+    for(unsigned i(0); i<conf_.npart; i++){
+        if( sim.update_list_[i] ){
+            send_buf[ib] = *(conf_.parts[i]);
+            send_buf[ib].id = conf_.parts[i]->id;
+            ib++;
+        }
+    }
+    std::cout << "Whos there? CPU" << rank << " is!" << std::endl;
+    for( unsigned i(0); i<bsize; i++ )
+        std::cout << "  " << send_buf[i] << std::endl;
+    MPI_Barrier( MPI_COMM_WORLD );
+    MPI_Request send_req[size];
+    for( unsigned i(0); i<size; i++ ){
+        if( i!=rank ){
+            MPI_Isend( &send_buf, bsizes[rank], MPI_Particle, i, 0, MPI_COMM_WORLD, &send_req[i] );
+            std::cout << "CPU" << rank << " sent " << bsizes[rank] << " particles to CPU" << i << "." << std::endl;
+        }
+    }
+    MPI_Barrier( MPI_COMM_WORLD );
+    for( unsigned i(0); i<size; i++ ){
+        if( i!=rank ){
+            recv_buf = new Particle[bsizes[i]];
+            MPI_Status stat;
+            std::cout << "CPU" << rank << " waits for " << bsizes[i] << " particles from CPU" << i << "." << std::endl;
+            MPI_Recv( recv_buf, bsizes[i], MPI_Particle, i, 0, MPI_COMM_WORLD,
+                    &stat );
+            std::cout << "CPU" << rank << " gets " << bsizes[i] << " particles from CPU" << i << "." << std::endl;
+            for( unsigned is(0); is<bsizes[i]; is++ ) {
+                unsigned identifier( recv_buf[is].id );
+                for( auto& pp : conf_.parts ) {
+                    if( pp->id == identifier ) {
+                        *pp = recv_buf[is];
+                        pp->id = identifier;
+                        break;
+                    }
+                }
+            }
+            delete[] recv_buf;
+        }
+    }
     delete[] bsizes;
+    delete[] send_buf;
     return E_SUCCESS;
 }
 
@@ -338,6 +380,7 @@ SError IOManager::BroadcastConfig() {
         conf_.extra_time=dv[4];
         std::cout << "CPU" << rank << " received configuration." << std::endl;
     }
+    std::cout << "CPU" << rank << " has npart=" << conf_.npart << std::endl;
     return E_SUCCESS;
 }
 
