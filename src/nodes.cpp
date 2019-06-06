@@ -544,9 +544,8 @@ SError QuadTree::RemoveParticle( Node* ptr ) const {
  * remaining child is found, and "dragged" to higher levels if it is itself a
  * leaf (if not, the deeper structure is still needed).
  * @param[in] ptr A pointer to the Node we wish to delete.
- * @returns An error code.
  */
-SError QuadTree::PruneNode( Node* ptr ) const {
+Node* QuadTree::PruneNode( Node* ptr ) const {
     // Prune the Node like demanded
     Node* n( ptr->GetParent() );
     unsigned ic( ptr->GetIndex() % 4 );
@@ -586,7 +585,7 @@ SError QuadTree::PruneNode( Node* ptr ) const {
             }
         }
     }
-    return E_SUCCESS;
+    return n;
 }
 
 /** @brief Overloaded operator for debugging purposes.

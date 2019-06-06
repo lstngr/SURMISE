@@ -95,7 +95,7 @@ class QuadTree {
         SError AddParticle( Particle* p ) const;
         SError AddParticle( std::vector<Particle*> p ) const;
         SError RemoveParticle( Node* ptr ) const;
-        SError PruneNode( Node* ptr ) const;
+        Node* PruneNode( Node* ptr ) const;
         friend std::ostream& operator<<( std::ostream& os, const QuadTree& tree );
     private:
         /// Pointer to the root of the tree.
