@@ -4,6 +4,7 @@
 #ifndef SURMISE_TIMER_HPP_
 #define SURMISE_TIMER_HPP_
 
+#include <iostream>
 #include "serrors.hpp"
 #include "iomanager.hpp"
 
@@ -36,5 +37,6 @@ class Timer {
         double* starts_;
         // double* ends_; ?
 };
+std::ostream& operator<<( std::ostream& os, const Timer& t );
 
 #endif // SURMISE_TIMER_HPP_

@@ -9,7 +9,9 @@
  */
 Simulation::Simulation( IOManager& io )
     :io_(io), timer_(new Timer()), conf_( io.GetConfig() ), tree_(NULL), update_list_(NULL)
-{}
+{
+    std::cout << "Initialized " << timer_->GetNumber() << " chronos." << std::endl;
+}
 
 /** Destroys the simulation object by freeing up the QuadTree allocated by the
  * class. All other members should be well behaved (the IOManager is set up in
@@ -62,7 +64,9 @@ SError Simulation::Run() {
         std::cout << "["<< wtime << "s] SURMISE run begins." << std::endl
             << "   MPI_WTIME_IS_GLOBAL=" << (bool)MPI_WTIME_IS_GLOBAL << std::endl;
     }
+    timer_->StartTimer( T_DISTR );
     io_.DistributeParticles(*this);
+    timer_->StopTimer( T_DISTR );
     for( unsigned iter(0); iter<conf_.max_iter; iter++ ) {
         timer_->StartTimer( T_ITER );
         ComputeForces();
@@ -81,6 +85,7 @@ SError Simulation::Run() {
         MPI_Barrier( MPI_COMM_WORLD );
         // If sufficient unbalancing, recompute indicies.
         // If time elapsed, cleanfully exit
+        std::cout << *timer_ << std::endl;
         if( MPI_Wtime()-start_time > conf_.max_wtime - conf_.extra_time ){
             if( rank==0 )
                 std::cout << "[" << MPI_Wtime() << "s] Run time elapsed, aborting"
