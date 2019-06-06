@@ -384,7 +384,7 @@ SError QuadTree::RemoveParticle( Node* ptr ) const {
     return E_SUCCESS;
 }
 
-SError QuadTree::PruneNode( Node* ptr ) const {
+Node* QuadTree::PruneNode( Node* ptr ) const {
     // Prune the Node like demanded
     Node* n( ptr->GetParent() );
     unsigned ic( ptr->GetIndex() % 4 );
@@ -424,7 +424,7 @@ SError QuadTree::PruneNode( Node* ptr ) const {
             }
         }
     }
-    return E_SUCCESS;
+    return n;
 }
 
 std::ostream& operator<<( std::ostream& os, const QuadTree& tree ) {

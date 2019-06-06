@@ -45,11 +45,11 @@ SError Simulation::UpdateTree() const {
             tree_->AddParticle( p );
             // The node is empty now. We first move the leaf pointer before
             // changing the tree structure, and prune the node.
-            tree_->PruneNode( leaf );
+            leaf = tree_->GetNextLeaf( tree_->PruneNode( leaf ) );
             // Local tree structure may change on several levels. Safer to
             // restart from Root. TODO(Might improve? Fetch parents, go down
             // again?)
-            leaf = tree_->GetNextLeaf( tree_->GetRoot() );
+            // leaf = tree_->GetNextLeaf( tree_->GetRoot() );
         } else {
             leaf = tree_->GetNextLeaf( leaf );
         }
