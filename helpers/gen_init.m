@@ -13,7 +13,7 @@ extratime = 10;
 output_path = 'out/';
 
 %% Distribution parameters (custom, user-filled)
-sim_idx = 2;
+sim_idx = 1;
 simname = 'default';
 savepath= './';
 switch sim_idx
@@ -22,7 +22,7 @@ switch sim_idx
         simname = 'alluniform';
     case 1
         npart = 100000;
-        [x,v,m] = ic_alluniform(npart,0,domsize,0,0,1,1);
+        [x,v,m] = ic_alluniform(npart,0,domsize,0,0,1e-7,1e-4);
         simname = 'largeuniform';
     case 2
         npart = 1000000;
