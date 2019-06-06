@@ -8,7 +8,7 @@
  * @param[in] io Reference to an initialized IOManager.
  */
 Simulation::Simulation( IOManager& io )
-    :io_(io), conf_( io.GetConfig() ), tree_(NULL), update_list_(NULL)
+    :io_(io), timer_(new Timer()), conf_( io.GetConfig() ), tree_(NULL), update_list_(NULL)
 {}
 
 /** Destroys the simulation object by freeing up the QuadTree allocated by the
@@ -23,6 +23,10 @@ Simulation::~Simulation() {
     if(update_list_!=NULL) {
         delete[] update_list_;
         update_list_=NULL;
+    }
+    if( timer_ != NULL ) {
+        delete timer_;
+        timer_=NULL;
     }
 }
 
@@ -60,13 +64,20 @@ SError Simulation::Run() {
     }
     io_.DistributeParticles(*this);
     for( unsigned iter(0); iter<conf_.max_iter; iter++ ) {
+        timer_->StartTimer( T_ITER );
         ComputeForces();
         TimeEvolution();
         // Sync Leafs, includes gathering to master
+        timer_->StartTimer( T_LEAFSYNC );
         io_.SyncLeafs(*this);
+        timer_->StopTimer( T_LEAFSYNC );
         UpdateTree();
-        if(rank==0)
+        if(rank==0){
+            timer_->StartTimer( T_OUTPUT );
             io_.WriteOutput( *this );
+            timer_->StopTimer( T_OUTPUT );
+        }
+        timer_->StopTimer( T_ITER );
         MPI_Barrier( MPI_COMM_WORLD );
         // If sufficient unbalancing, recompute indicies.
         // If time elapsed, cleanfully exit
@@ -76,7 +87,7 @@ SError Simulation::Run() {
                     << " further computation at iter=" << iter << "." << std::endl;
             return E_TIMEOUT;
         }
-        }
+    }
     return E_SUCCESS;
 }
 
@@ -117,6 +128,7 @@ SError Simulation::BuildTree() {
  * simulation, a segmentation fault occurs within this function.
  */
 SError Simulation::UpdateTree() const {
+    timer_->StartTimer( T_TREEUPDATE );
     Node *leaf( tree_->GetNextLeaf( tree_->GetRoot() ) );
     // Reassignement step. Particles are moved where they're supposed to be.
     do {
@@ -163,6 +175,7 @@ SError Simulation::UpdateTree() const {
         } while( up != NULL );
         leaf = tree_->GetNextLeaf(leaf);
     } while( leaf != NULL );
+    timer_->StopTimer( T_TREEUPDATE );
     return E_SUCCESS;
 }
 
@@ -175,6 +188,7 @@ SError Simulation::UpdateTree() const {
  * std::sqrt and a double division is avoided.
  */
 SError Simulation::ComputeForces() const {
+    timer_->StartTimer( T_FORCES );
     Node *leaf(tree_->GetRoot()), *node(leaf);
     leaf = tree_->GetNextLeaf(leaf);
     while( leaf != NULL ){
@@ -208,6 +222,7 @@ SError Simulation::ComputeForces() const {
         leaf = tree_->GetNextLeaf(leaf);
         node = tree_->GetRoot();
     }
+    timer_->StopTimer( T_FORCES );
     return E_SUCCESS;
 }
 
@@ -216,6 +231,7 @@ SError Simulation::ComputeForces() const {
  * @returns An error code.
  */
 SError Simulation::TimeEvolution() const {
+    timer_->StartTimer( T_EVOL );
     Node* leaf = tree_->GetNextLeaf(tree_->GetRoot());
     while( leaf != NULL ) {
         if( update_list_[leaf->GetParticle()->id] ) {
@@ -227,5 +243,6 @@ SError Simulation::TimeEvolution() const {
         }
         leaf = tree_->GetNextLeaf( leaf );
     }
+    timer_->StopTimer( T_EVOL );
     return E_SUCCESS;
 }

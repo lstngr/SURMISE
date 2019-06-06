@@ -5,6 +5,7 @@
 #define SURMISE_TIMER_HPP_
 
 #include "serrors.hpp"
+#include "iomanager.hpp"
 
 enum STimerNames {
     T_ITER=0,
@@ -12,6 +13,7 @@ enum STimerNames {
     T_FORCES,
     T_EVOL,
     T_LEAFSYNC,
+    T_TREEUPDATE,
     T_OUTPUT,
     T_COUNT
 };
@@ -20,7 +22,7 @@ enum STimerNames {
  */
 class Timer {
     public:
-        Timer( unsigned count=1 );
+        Timer( unsigned count=T_COUNT );
         ~Timer();
         SError StartTimer( unsigned idx );
         SError StopTimer(  unsigned idx );

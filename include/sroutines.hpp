@@ -7,6 +7,7 @@
 
 #include <mpi.h>
 #include "stypes.hpp"
+#include "timer.hpp"
 #include "iomanager.hpp"
 #include "nodes.hpp"
 #include "serrors.hpp"
@@ -27,6 +28,9 @@ class Simulation {
         /** Reference to an input/output manager for configuration reading and
          * data output.*/
         IOManager& io_;
+        /**
+         */
+        Timer* timer_;
         /** Constant reference to the simulation configuration produced by the
          * IOManager class. It contains all particles of the system, dynamically
          * allocated by the input routines.*/
