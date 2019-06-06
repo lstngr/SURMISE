@@ -192,13 +192,15 @@ SError IOManager::SyncLeafs( Simulation& sim ) {
                     &stat );
             for( unsigned is(0); is<bsizes[i]; is++ ) {
                 unsigned identifier( recv_buf[is].id );
-                for( const auto& pp : conf_.parts ) {
-                    if( pp->id == identifier ) {
-                        *pp = recv_buf[is];
-                        pp->id = identifier;
-                        break;
-                    }
-                }
+                *(conf_.parts[identifier]) = recv_buf[is];
+                conf_.parts[identifier]->id = identifier;
+                // for( const auto& pp : conf_.parts ) {
+                //     if( pp->id == identifier ) {
+                //         *pp = recv_buf[is];
+                //         pp->id = identifier;
+                //         break;
+                //     }
+                // }
             }
             delete[] recv_buf;
         }
