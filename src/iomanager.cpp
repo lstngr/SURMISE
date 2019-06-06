@@ -116,6 +116,25 @@ const SConfig& IOManager::GetConfig() const {
     return conf_;
 }
 
+/** @brief Sends a copy of Particles stored in the master process and builds an
+ * update list for each thread.
+ * @details The routine is called by all (participating) threads (usually, all
+ * running instances). It assumes the run just began, and that only the
+ * configuration object of the master process is filled with particles.
+ * First, particles are being broadcast from the master process, and indexes are
+ * manipulated so that they're preserved (remember the assignement operator
+ * resets it otherwise).
+ * Then, each thread builds a tree local to its process.
+ * Finally, the number of particles handled by each processor is computed, and
+ * the leaf level of the tree is browsed with QuadTree::GetNextLeaf. Booleans
+ * are set to indicate a process whether it manages a given particle or not. The
+ * ordering of the Z-curve should pack particles close to another and assign
+ * them to a similar process.
+ *
+ * @param[in] sim Reference to the simulation object to modify. It is used for
+ * Simulation related tasks, such as tree building and browsing.
+ * @returns An error code.
+ */
 SError IOManager::DistributeParticles( Simulation& sim ) {
     int rank,size;
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
@@ -155,6 +174,29 @@ SError IOManager::DistributeParticles( Simulation& sim ) {
     return E_SUCCESS;
 }
 
+/** @brief Ensures all processors share the most up-to-date information about
+ * every particle in the system.
+ * @details Given a simulation object, the threads first communicate how many
+ * particles they each manage to one another. A buffer is then prepared, in
+ * which particles managed by the running thread are stored (with their index
+ * preserved). A nonblocking send request is then filed through the MPI
+ * interface.
+ * Then, each thread enter a loop where they wait for each processor to
+ * communicate their particles. The receiving operation is blocking. Received
+ * particles are stored in the configuration where they override their _older_
+ * counterparts.
+ * The routine finally frees all allocated buffers in memory and returns.
+ *
+ * @warning This routine assumes all particles are available on all processors,
+ * and that they are ordered by increasing index in the configuration object. It
+ * then uses the particle's index to avoid searching through local particles
+ * which is the one to replace, but could lead to segmentation faults or logical
+ * errors easily if other parts of the code change.
+ *
+ * @param[in] sim Reference to the simulation object in which the particle
+ * update lists are stored.
+ * @returns An error code.
+ */
 SError IOManager::SyncLeafs( Simulation& sim ) {
     int rank,size;
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
@@ -341,6 +383,9 @@ SError IOManager::GenerateConfig( const std::string& file ) {
     return E_SUCCESS;
 }
 
+/** Distributes all numeric parameters of the configuration object to available
+ * threads.
+ */
 SError IOManager::BroadcastConfig() {
     // Define buffers for (unsigned int) values of SConfig
     unsigned uv[2];

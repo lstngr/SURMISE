@@ -34,6 +34,9 @@ class Simulation {
         /** Pointer to a class containing a quad-tree. This tree will be by the
          * Barnes-Hut algorithm.*/
         QuadTree* tree_;
+        /** List of boolean flags determining if the current simulation instance
+         * is responsible of an existing particle or not.
+         */
         bool* update_list_;
 };
 

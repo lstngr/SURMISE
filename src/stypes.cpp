@@ -13,9 +13,20 @@ void destroy_vector(std::vector<T*> &v)
 
 MPI_Datatype MPI_Particle;
 
+/** @brief Declares custom MPI datatypes.
+ * @details The MPI library provides custom formats for standard C++ types that
+ * can be provided to the communication functions (e.g. MPI_Send, MPI_Recv) to
+ * indicate how to parse the contents of the provided buffers. In order to use
+ * the MPI library's features efficiently, we declare MPI_Datatype objects that
+ * allow us to send custom structures, declared within the SURMISE code,
+ * efficiently.
+ * This function declares a MPI_Particle object to the library by commiting it.
+ * If the size of the initially declared MPI_Datatype and the one of the object
+ * stored in memory differ, MPI_Type_resize_struct is called.
+ */
 void make_mpi_types() {
     /* ---------------------------- */
-    // Define the MPI Particle type
+    // Define the MPI Particle type //
     /* ---------------------------- */
     // Inspired by the example 4.17 of the MPI3.1 manual
     MPI_Datatype MPI_Particle_NR;
@@ -49,6 +60,9 @@ void make_mpi_types() {
     MPI_Type_commit( &MPI_Particle );
 }
 
+/** This function frees the types declared to the MPI library by the commits
+ * performed in make_mpi_types(). It is called before the main returns.
+ */
 void free_mpi_types() {
     MPI_Type_free( &MPI_Particle );
 }
@@ -121,11 +135,19 @@ Particle& Particle::operator-=( const Particle& other ) {
     return *this;
 }
 
+/** Overloaded printing operator. It is meant for debugging purposes, one should
+ * look into IOManager::WriteOutput to obtain coherently structured data.
+ */
 std::ostream& operator<<( std::ostream& os, const Particle& p ) {
     os << "[PART " << &p << "] ID=" << p.id << "/MASS=" << p.mass << " POS=(" << p.pos[0] << "," << p.pos[1] << ")";
     return os;
 }
 
+/** Computes the gravitational forces between two particles and returns them in
+ * an array. Note no force is applied on the passed particles, and that the
+ * returned force is the one felt by the first argument due to the second
+ * argument.
+ */
 std::array<double,2> pp_force( const Particle& p1, const Particle& p2 ) {
     // NOTE - We compute the square of the distance instead of working with the
     // Node's functions.

@@ -26,11 +26,12 @@ struct Particle {
     Particle& operator+=( const Particle& other );
     Particle& operator-=( const Particle& other );
 };
-Particle operator+( Particle lhs, const Particle& rhs );
-Particle operator-( Particle lhs, const Particle& rhs );
 std::ostream& operator<<( std::ostream& os, const Particle& p );
 std::array<double,2> pp_force( const Particle& p1, const Particle& p2 );
 
+/** MPI Datatype corresponding to a Particle structure.
+ * \see make_mpi_types
+ */
 extern MPI_Datatype MPI_Particle;
 void make_mpi_types();
 void free_mpi_types();
