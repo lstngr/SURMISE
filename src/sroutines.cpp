@@ -9,9 +9,7 @@
  */
 Simulation::Simulation( IOManager& io )
     :io_(io), timer_(new Timer()), conf_( io.GetConfig() ), tree_(NULL), update_list_(NULL)
-{
-    std::cout << "Initialized " << timer_->GetNumber() << " chronos." << std::endl;
-}
+{}
 
 /** Destroys the simulation object by freeing up the QuadTree allocated by the
  * class. All other members should be well behaved (the IOManager is set up in
@@ -76,16 +74,21 @@ SError Simulation::Run() {
         io_.SyncLeafs(*this);
         timer_->StopTimer( T_LEAFSYNC );
         UpdateTree();
+        wtime = MPI_Wtime();
         if(rank==0){
-            timer_->StartTimer( T_OUTPUT );
             io_.WriteOutput( *this );
-            timer_->StopTimer( T_OUTPUT );
+        } else {
+            double *sbuf(new double[T_COUNT]), *rbuf(NULL);
+            for( unsigned i_timer(0); i_timer<T_COUNT; i_timer++ )
+                sbuf[i_timer] = timer_->GetTime(i_timer);
+            MPI_Gather( sbuf, T_COUNT, MPI_DOUBLE, rbuf, T_COUNT, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+            delete[] sbuf;
         }
-        timer_->StopTimer( T_ITER );
+        timer_->SetTimer( T_OUTPUT, MPI_Wtime() - wtime );
         MPI_Barrier( MPI_COMM_WORLD );
+        timer_->StopTimer( T_ITER );
         // If sufficient unbalancing, recompute indicies.
         // If time elapsed, cleanfully exit
-        std::cout << *timer_ << std::endl;
         if( MPI_Wtime()-start_time > conf_.max_wtime - conf_.extra_time ){
             if( rank==0 )
                 std::cout << "[" << MPI_Wtime() << "s] Run time elapsed, aborting"

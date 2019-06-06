@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iomanip>
 #include <mpi.h>
 #include "iomanager.hpp"
 #include "sroutines.hpp"
@@ -35,9 +36,14 @@ IOManager::IOManager( std::string input_path )
  * data is output, as well as the output frequency.
  */
 SError IOManager::WriteOutput( const Simulation& sim ) {
-    std::ofstream particles, tree;
+    int rank,size;
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    MPI_Comm_size( MPI_COMM_WORLD, &size );
+    std::ofstream particles, tree, timers;
     OpenStream( particles, conf_.opath + ".leafs." + std::to_string(write_iter) );
     OpenStream( tree, conf_.opath + ".tree." + std::to_string(write_iter) );
+    if( sim.timer_ != NULL )
+        OpenStream( timers, conf_.opath + ".timers." + std::to_string(write_iter) );
     // Get Root of the tree
     Node* pptr(sim.tree_->GetRoot());
     pptr = sim.tree_->GetNextLeaf( pptr );
@@ -102,8 +108,29 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
             }
         }
     }
+    // TIMER PRINTING
+    if( sim.timer_ != NULL ) {
+        double *sbuf(NULL), *rbuf(NULL);
+        sbuf = new double[T_COUNT];
+        // Get all timers on CPU0
+        rbuf = new double[size*T_COUNT];
+        for( unsigned i_timer(0); i_timer<T_COUNT; i_timer++ )
+            sbuf[i_timer] = sim.timer_->GetTime(i_timer);
+        MPI_Gather( sbuf, T_COUNT, MPI_DOUBLE, rbuf, T_COUNT, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+        delete[] sbuf;
+        for( unsigned ip(0); ip<size; ip++ ) {
+            timers << ip << std::setprecision(8);
+            for( unsigned it(0); it<T_COUNT; it++ ) {
+                timers << "," << rbuf[ip*T_COUNT+it];
+            }
+            timers << std::endl;
+        }
+        delete[] rbuf;
+    }
     CloseStream( particles );
     CloseStream( tree );
+    if( sim.timer_ != NULL )
+        CloseStream( timers );
     write_iter++;
     return E_SUCCESS;
 }

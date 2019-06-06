@@ -31,6 +31,12 @@ SError Timer::StartTimer( unsigned idx ) {
     return E_SUCCESS;
 }
 
+SError Timer::SetTimer( unsigned idx, const double& val ) {
+    StopTimer( idx );
+    timers_[idx] = val;
+    return E_SUCCESS;
+}
+
 SError Timer::StopTimer( unsigned idx ) {
     timers_[idx] = MPI_Wtime() - starts_[idx];
     starts_[idx] = 0.0;

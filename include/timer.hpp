@@ -26,12 +26,12 @@ class Timer {
         Timer( unsigned count=T_COUNT );
         ~Timer();
         SError StartTimer( unsigned idx );
+        SError SetTimer( unsigned idx, const double& val );
         SError StopTimer(  unsigned idx );
         bool IsActive( unsigned idx ) const;
         unsigned GetNumber() const;
         double GetTime( unsigned idx ) const;
     private:
-        friend class IOManager;
         unsigned counters_;
         double* timers_;
         double* starts_;
