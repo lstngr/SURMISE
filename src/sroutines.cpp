@@ -49,10 +49,15 @@ Simulation::~Simulation() {
  */
 SError Simulation::Run() {
     int rank,size;
+    double start_time(MPI_Wtime())
+        ,wtime(0.);
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
-    if( rank==0 )
-        std::cout << "SURMISE run begins." << std::endl;
+    if( rank==0 ){
+        wtime = MPI_Wtime();
+        std::cout << "["<< wtime << "s] SURMISE run begins." << std::endl
+            << "   MPI_WTIME_IS_GLOBAL=" << (bool)MPI_WTIME_IS_GLOBAL << std::endl;
+    }
     io_.DistributeParticles(*this);
     for( unsigned iter(0); iter<conf_.max_iter; iter++ ) {
         ComputeForces();
@@ -64,6 +69,13 @@ SError Simulation::Run() {
             io_.WriteOutput( *this );
         MPI_Barrier( MPI_COMM_WORLD );
         // If sufficient unbalancing, recompute indicies.
+        // If time elapsed, cleanfully exit
+        if( MPI_Wtime()-start_time > conf_.max_wtime - conf_.extra_time ){
+            if( rank==0 )
+                std::cout << "[" << MPI_Wtime() << "s] Run time elapsed, aborting"
+                    << " further computation at iter=" << iter << "." << std::endl;
+            return E_TIMEOUT;
+        }
         }
     return E_SUCCESS;
 }
