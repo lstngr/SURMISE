@@ -97,5 +97,6 @@ std::string ConfigFile::trim(std::string str)
 
 // Instantiate required templates
 template int ConfigFile::get<int>(const std::string& key) const;
+template unsigned ConfigFile::get<unsigned>(const std::string& key) const;
 template double ConfigFile::get<double>(const std::string& key) const;
 template std::string ConfigFile::get<std::string>(const std::string& key) const;

@@ -75,9 +75,9 @@ SError Simulation::Run() {
         timer_->StopTimer( T_LEAFSYNC );
         UpdateTree();
         wtime = MPI_Wtime();
-        if(rank==0){
+        if(rank==0 and iter%conf_.write_freq ){
             io_.WriteOutput( *this );
-        } else {
+        } else if( iter%conf_.write_freq ){
             double *sbuf(new double[T_COUNT]), *rbuf(NULL);
             for( unsigned i_timer(0); i_timer<T_COUNT; i_timer++ )
                 sbuf[i_timer] = timer_->GetTime(i_timer);

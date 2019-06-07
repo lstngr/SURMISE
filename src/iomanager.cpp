@@ -383,12 +383,16 @@ SError IOManager::GenerateConfig( const std::string& file ) {
     ConfigFile cfg(cfile);
     // Load basic parameters
     conf_.dsize      = cfg.get<double>("domsize");
-    conf_.npart      = cfg.get<int>("npart");
+    conf_.npart      = cfg.get<unsigned>("npart");
     conf_.dt         = cfg.get<double>("tevol_dt");
     conf_.theta      = cfg.get<double>("theta");
-    conf_.max_iter   = cfg.get<int>("max_iter");
+    conf_.max_iter   = cfg.get<unsigned>("max_iter");
     conf_.max_wtime  = cfg.get<double>("walltime");
     conf_.extra_time = cfg.get<double>("extratime");
+    conf_.write_freq = cfg.get<unsigned>("write_freq");
+    if( not conf_.write_freq )
+        conf_.write_freq = 1;
+    std::cout << "Read write_freq=" << conf_.write_freq << std::endl;
     conf_.ipath      = file;
     conf_.opath      = cfg.get<std::string>("output_path") + oname;
     // Load particles
@@ -415,13 +419,14 @@ SError IOManager::GenerateConfig( const std::string& file ) {
  */
 SError IOManager::BroadcastConfig() {
     // Define buffers for (unsigned int) values of SConfig
-    unsigned uv[2];
+    unsigned uv[3];
     double   dv[5];
     int rank;
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     if( rank==0 ) {
         uv[0] = conf_.npart;
         uv[1] = conf_.max_iter;
+        uv[2] = conf_.write_freq;
         dv[0] = conf_.dsize;
         dv[1] = conf_.dt;
         dv[2] = conf_.theta;
@@ -429,7 +434,7 @@ SError IOManager::BroadcastConfig() {
         dv[4] = conf_.extra_time;
         std::cout << "CPU" << rank << " broadcasts configuration." << std::endl;
     }
-    MPI_Bcast( &uv, 2, MPI_UNSIGNED, 0, MPI_COMM_WORLD );
+    MPI_Bcast( &uv, 3, MPI_UNSIGNED, 0, MPI_COMM_WORLD );
     MPI_Bcast( &dv, 5, MPI_DOUBLE, 0, MPI_COMM_WORLD );
     if( rank>0 ) {
         conf_.dsize = dv[0];
@@ -439,6 +444,7 @@ SError IOManager::BroadcastConfig() {
         conf_.max_iter = uv[1];
         conf_.max_wtime= dv[3];
         conf_.extra_time=dv[4];
+        conf_.write_freq=uv[2];
         std::cout << "CPU" << rank << " received configuration." << std::endl;
     }
     return E_SUCCESS;
