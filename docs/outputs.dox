@@ -4,7 +4,7 @@ Once execution has finished (cleanly or not), outputs that have successfuly been
 performed are located in the output folder.
 The user may read these files with MATLAB or Python helpers.
 
-\subsection matlab_helpers MATLAB helpers
+\section matlab_helpers MATLAB helpers
 
 Two functions are of interest, "read_output(filename)" where filename is the
 name of the simulation. It is the same as the name from the configuration files
@@ -18,7 +18,7 @@ physical quantity.
 This matrix can be passed to the function "plot_sim(out)" which will plot each
 time step of the configuration and exit (create a movie if you will).
 
-\subsection Python Helpers
+\section Python Helpers
 
 Pythonic helpers are available in the form of Jupyter Notebooks. The notebook
 "TreeViz" allows the user to visualize a tree in memory (from the tree output

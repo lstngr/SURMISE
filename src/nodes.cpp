@@ -205,7 +205,7 @@ unsigned Node::GetQuadrant( Node* n ) const {
  * (0=x, 1=y).
  */
 double Node::GetForce( unsigned dim ) const {
-    /// @todo Delete this fucking mess.
+    /// @todo Delete this if possible. Pretty ugly.
     return com_->frc[dim];
 }
 

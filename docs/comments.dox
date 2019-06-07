@@ -1,0 +1,26 @@
+/** @page perso_comments Comments
+
+\section Concerning the code
+
+1. Used with large systems, the MPI implementation of the problem fails with a
+segmentation fault (configurations with size larger than 1e5 particles). I fail
+to diagnose the problem in the debugged code, since the location at which the
+segmentation fault is encountered varies depending on the input file that is
+provided (and that the GUI debugger, Totalview, is impossible to use on the
+Deneb server).
+2. A hotspots profiling was attempted, but the amplxe-gui report fails to use
+more than one CPU when called through ssh. I again fail to diagnose the problem
+here.
+3. Concerning the two above points, I tried installing the software on my
+computer, but the licensing page from the SCITAS refused my login at the
+Tequilla authentification page.
+4. The SError class is a remanent structure that I implemented at the start of
+the project in an attempt to handle errors conveniently through the simulation.
+It never made it to the "final" version due to lack of time.
+5. I first hoped to implement the multipole expansion algorithm, but had to
+rewrite my code from the bottom-up between the 27.05.2019 and the 07.06.2019 in
+order to implement a working Barnes-Hut version (see core/barnes-hut branch on
+the repo). I would be glad if this could be taken into account in the final
+grade.
+
+*/

@@ -36,6 +36,25 @@ python_timings timing investigation \endlink for more details.
 
 @section scalings_deneb Scalings with More Cores
 
+Some runs indicate similar scalings as before without output to files, but due
+to frequent crashes that I fail to diagnose, this section is left empty.
+
 @section python_timings Time Distribution
 
+Below, we plot the timings when the program outputs every iteration. We clearly
+see that the workload on CPU0 (which writes) is the highest. The second most
+important contribution (overall) comes from the computation of the forces. (Note
+T_DISTR, the time to distribute particles across MPI instances is constant since
+only read before the main iteration).
+\image html tpercpu.png
+\image html tpertask.png
+\image html tperiter.png
+
+Unfortunately, the time with less calls to the IO routines is not relevant due
+to a failing implementation of the Timer class to handle multiple time steps.
+
+@section valgrind Memory leaks
+
+The application is checked for memory leaks using Valgrind 3.14.0. It is found
+that, unless a crash occurs, the memory is freed entirely at the end of a run.
 */

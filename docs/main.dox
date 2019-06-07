@@ -10,6 +10,7 @@ MPI library. The following topics are covered:
 3. \link page_outputs Reading output files using MATLAB and Jupyter Notebooks
 \endlink
 4. \link page_perfo Performance analysis \endlink
+5. \link perso_comments General comments about the code and the tests \endlink
 
 A set of helper scripts is also provided, and although briefly documented in
 this Doxygen documentation, we refer the reader to the comments in these scripts

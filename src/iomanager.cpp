@@ -304,7 +304,7 @@ SError IOManager::DistributeTree( const Simulation& sim ) {
             Particle buf[send_size];
             unsigned pidx(0);
             while( ptr != NULL and pidx<send_size ){
-                ///@todo Fix this absolute bullshit. We precisely implemented
+                ///@todo Fix this? We precisely implemented
                 ///the operator= to remove the identifier.
                 unsigned pid( ptr->GetParticle()->id );
                 buf[pidx] = *(ptr->GetParticle());
