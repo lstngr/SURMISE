@@ -1,0 +1,29 @@
+/** @page page_geninit Generating Initial Conditions
+
+In order to start, the simulation relies on two files with the same name and
+different extensions, which are to be provided in a single argument after the
+executable. The parameters that one may tweak are described in SConfig. The
+configuration file, with extension ".conf" can be annoted by lines with MATLAB
+style comments "%". The class that parses this configuration file through the
+class ConfigFile (not written by me, see the source for authorship).
+
+The configuration specifies a particle number, which is the number of lines
+expected to be read in the input file with extension ".init". This one is CSV
+formatted with the following format,
+```
+x1 (position), x2(position), v1(velocity), v2(velocity), m(mass)
+```
+as found in the helper script (see `helpers` folders) "gen_init.m". This helper
+script relies on several smaller functions to output the pair of configuration
+files that were mentionned to the current folder. An integer switch allows the
+user to select the desired configuration.
+
+The program is not designed to handle poorly formatted files, and any mistake in
+the configuration files or in the input path when running the program will lead
+to a segmentation fault.
+
+The program tries to output data to the path given in Simulation::conf_.opath.
+To output to the current folder, set this variable to the current path: "."
+
+If the output path is not available, the program will crash.
+*/

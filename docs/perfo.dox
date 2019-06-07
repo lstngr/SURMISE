@@ -1,0 +1,41 @@
+/** @page page_perfo Performance
+
+In this section, we use the cluster test case generated from the MATLAB file
+"gen_init" (test case 4).
+
+@section scalings-basic General (Strong) Scaling
+
+Ran on an Intel i5-8250U at 1.60GHz. Timing with the UNIX `time` command.
+We run for 200 iterations with 1e5 particles and write the output at each
+iteration.
+
+| N CPU |  Real  |  User  | System  | SpeedUp |
+| ----: | :----: | :----: | :-----: | :-----: |
+| 1     | 40.07s | 25.71s | 14.13s  | 1.000   |
+| 2     | 34.06s | 53.46s | 14.29s  | 1.176   |
+| 3     | 32.77s | 83.37s | 14.07s  | 1.223   |
+| 4     | 38.28s | 134.3s | 17.03s  | 1.047   |
+
+The scaling is almost inexistant. It appears that the communication time becomes
+too important with already 4CPUs.
+We suppose the output writing functions are responsible for this (high system
+time), since CPU0 writes while other processes need to wait, and retry with no
+outputs.
+
+| N CPU |  Real  |  User  | System  | SpeedUp |
+| ----: | :----: | :----: | :-----: | :-----: |
+| 1     | 15.80s | 15.52s | 0.133s  | 1.000   |
+| 2     | 9.036s | 17.70s | 0.159s  | 1.749   |
+| 3     | 8.398s | 24.54s | 0.288s  | 1.881   |
+| 4     | 7.719s | 30.04s | 0.280s  | 2.047   |
+
+Now, we can measure a real speed-up. The strong scaling however seems to be
+capped a 4CPUs. This is forcibly due to inefficient use of the MPI library
+(remember we use mostly global communication). One may refer to the \link
+python_timings timing investigation \endlink for more details.
+
+@section scalings_deneb Scalings with More Cores
+
+@section python_timings Time Distribution
+
+*/

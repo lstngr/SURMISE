@@ -1,0 +1,29 @@
+/** @page page_compilation Compiling and Running
+
+In order to compile the code, first make sure a `Makefile` is available. It
+should be there already. Then, create the folders `bin`, `build` and `out`,
+\code{.sh}
+mkdir bin build out
+\endcode
+that we will need soon.
+
+The C++ code itself is build by a simple call to `make`. The documentation can
+be built with `make docs` (but you likely already did that). Build files can be
+removed with `make clean`, and `make cleanall` also removes the existing
+binaries.
+
+You can try running the code by moving to the root of the git repository and
+typing:
+```
+bin/surmise input/alluniform
+```
+Notice the subsequent output to the folder `out`. The second argument points to
+the simulation you want to run. Given this "path", the program tries to load the
+files `input/alluniform.conf` and `input/alluniform.init` respectively
+containing key-value parameters and CSV formatted initial conditions (see
+SConfig and IOManager::GenerateConfig).
+
+The initial configuration file is described \link page_geninit here \endlink,
+and an explanation on output parsing is available \link page_outputs there
+\endlink.
+*/
