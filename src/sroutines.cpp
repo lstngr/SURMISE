@@ -74,7 +74,7 @@ SError Simulation::Run() {
         io_.SyncLeafs(*this);
         timer_->StopTimer( T_LEAFSYNC );
         UpdateTree();
-        wtime = MPI_Wtime();
+        timer_->StartTimer( T_OUTPUT );
         if(rank==0 and iter%conf_.write_freq ){
             io_.WriteOutput( *this );
         } else if( iter%conf_.write_freq ){
@@ -84,7 +84,7 @@ SError Simulation::Run() {
             MPI_Gather( sbuf, T_COUNT, MPI_DOUBLE, rbuf, T_COUNT, MPI_DOUBLE, 0, MPI_COMM_WORLD );
             delete[] sbuf;
         }
-        timer_->SetTimer( T_OUTPUT, MPI_Wtime() - wtime );
+        timer_->StopTimer( T_OUTPUT );
         timer_->StopTimer( T_ITER );
         // If sufficient unbalancing, recompute indicies.
         // If time elapsed, cleanfully exit
