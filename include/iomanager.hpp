@@ -1,7 +1,3 @@
-/**
- * @file IOManager
- */
-
 #ifndef SURMISE_IOMANAGER_HPP_
 #define SURMISE_IOMANAGER_HPP_
 

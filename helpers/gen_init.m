@@ -10,6 +10,7 @@ theta = 0.4;
 maxiter = 1000;
 maxwtime = 60;
 extratime = 10;
+write_freq = 1;
 output_path = 'out/';
 
 %% Distribution parameters (custom, user-filled)
@@ -35,7 +36,7 @@ switch sim_idx
         [x,v,m] = ic_radial(npart,0,domsize,vrad,vstd,0.05,1);
         simname = 'medradial';
     case 4
-        npart = 1e3;
+        npart = 1e6;
         vrad = 1;
         vstd = 0.25;
         clustsz = 15; clustpos=25;
@@ -69,9 +70,10 @@ fprintf(fileID,['domsize=%.10f\n',...
                 'max_iter=%u\n',...
                 'walltime=%.10f\n',...
                 'extratime=%.10f\n',...
+                'write_freq=%u\n',...
                 'output_path=%s\n'],...
                 domsize,npart,dt,epsilon,theta,maxiter,maxwtime,extratime,...
-                output_path);
+                write_freq,output_path);
 fclose(fileID);
 fileID = fopen(fileinit,'w');
 fprintf(fileID,'%.25f %.25f %.25f %.25f %.25f\n',data');

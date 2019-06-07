@@ -1,7 +1,3 @@
-/**
- * @file Something
- */
-
 #ifndef SURMISE_SROUTINES_HPP_
 #define SURMISE_SROUTINES_HPP_
 
@@ -14,6 +10,9 @@
 
 extern MPI_Datatype MPI_Particle;
 
+/** Wrapper around the datatypes defined in this simulation. It runs a N-body
+ * gravity simulation, manages the outputs, and stuff like that.
+ */
 class Simulation {
     public:
         Simulation( IOManager& io );

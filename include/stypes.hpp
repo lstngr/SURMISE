@@ -1,7 +1,3 @@
-/** \file stypes.hpp
- * @brief Defines the variables, structures and classes used by the simulation
- * routine.
- */
 #ifndef SURMISE_STYPES_
 #define SURMISE_STYPES_
 

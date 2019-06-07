@@ -1,12 +1,17 @@
 /**
 \mainpage Documentation for the PHPC project that will SURMISE
 
-\section main_sec_intro Introduction
-Oh, hello there
+The code that this documentation covers aims to solve the *N*-body gravity
+problem in two dimensions. It is implemented in C++11 and parallelized using the
+MPI library. The following topics are covered:
 
-\section main_sec_nav Navigation?
-HeyHey
+1. \link page_compilation Compiling the code and running simulations \endlink
+2. \link page_geninit Generating initial conditions and parameter files \endlink
+3. \link page_outputs Reading output files using MATLAB and Jupyter Notebooks
+\endlink
+4. \link page_perfo Performance analysis \endlink
 
-\section main_sec_contact Contact
-This is ma code, contact me here
+A set of helper scripts is also provided, and although briefly documented in
+this Doxygen documentation, we refer the reader to the comments in these scripts
+if interested.
 */

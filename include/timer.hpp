@@ -1,6 +1,3 @@
-/**
- * @file timer_hpp_ I time you
- */
 #ifndef SURMISE_TIMER_HPP_
 #define SURMISE_TIMER_HPP_
 
