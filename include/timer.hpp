@@ -8,6 +8,10 @@
 #include "serrors.hpp"
 #include "iomanager.hpp"
 
+/** Enumeration assigning indices to timer tasks.
+ * @warning Relies on the last element to get the number of elements defined in
+ * the enumeration. Behavior may vary across compilers.
+ */
 enum STimerNames {
     T_ITER=0,
     T_DISTR,
@@ -16,10 +20,10 @@ enum STimerNames {
     T_LEAFSYNC,
     T_TREEUPDATE,
     T_OUTPUT,
-    T_COUNT
+    T_COUNT //!< Count of the number of elements in STimerNames (may vary across compilers)
 };
 
-/** @brief A class measuring the almighty time.
+/** A class measuring the almighty time. It relies exclusively on MPI_Wtime.
  */
 class Timer {
     public:
@@ -32,10 +36,17 @@ class Timer {
         unsigned GetNumber() const;
         double GetTime( unsigned idx ) const;
     private:
+        /** Integer indicating the number of timers in the class.
+         */
         unsigned counters_;
+        /** Array of times. Times computed between a timer start and stop calls
+         * are stored here.
+         */
         double* timers_;
+        /** Array of start times. These are temporary, are set by a start call,
+         * and are erased by a stop call.
+         */
         double* starts_;
-        // double* ends_; ?
 };
 std::ostream& operator<<( std::ostream& os, const Timer& t );
 

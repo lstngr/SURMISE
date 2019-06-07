@@ -3,6 +3,10 @@
 #include <mpi.h>
 #include "timer.hpp"
 
+/** Timer constructor expecting a count for dynamic allocation calls.
+ * @param[in] count Number of timers to set up. Usually, an enumeration will be
+ * queried to fetch this number (default argument).
+ */
 Timer::Timer( unsigned count )
     :counters_(count), timers_(NULL), starts_(NULL)
 {
@@ -14,6 +18,8 @@ Timer::Timer( unsigned count )
     starts_ = new double[counters_];
 }
 
+/** Frees the memory allocated for the timers.
+ */
 Timer::~Timer() {
     if( timers_!=NULL ) {
         delete[] timers_;
@@ -25,32 +31,56 @@ Timer::~Timer() {
     }
 }
 
+/** Starts the timer with the requested index. The timer storage array is
+ * cleared at the index location.
+ * @param[in] idx Index of the timer to start
+ */
 SError Timer::StartTimer( unsigned idx ) {
     timers_[idx] = 0.0;
     starts_[idx] = MPI_Wtime();
     return E_SUCCESS;
 }
 
+/** Overrides calls to start and stop and assigns a given value to the requested
+ * timer. The timer is left stopped.
+ * @param[in] idx Index of the timer.
+ * @param[in] val Value to store in the timer's slot.
+ */
 SError Timer::SetTimer( unsigned idx, const double& val ) {
     StopTimer( idx );
     timers_[idx] = val;
     return E_SUCCESS;
 }
 
+/** Stops a running timer. The difference between the actual time and the
+ * starting time is computed, and the start time is cleared.
+ * @param[in] idx Index of the timer.
+ */
 SError Timer::StopTimer( unsigned idx ) {
     timers_[idx] = MPI_Wtime() - starts_[idx];
     starts_[idx] = 0.0;
     return E_SUCCESS;
 }
 
+/** Checks if a timer is active (if it's start time is set).
+ * @param[in] idx Timer index.
+ * @return True if the timer is running.
+ */
 bool Timer::IsActive( unsigned idx ) const {
     return timers_[idx]==0.0;
 }
 
+/** Returns the number of timers are handled.
+ */
 unsigned Timer::GetNumber() const {
     return counters_;
 }
 
+/** Returns the requested timer's time.
+ * If the timer is running, this time is computed on the fly.
+ * @param[in] idx Index of the timer.
+ * @return Time elapsed since the timer started.
+ */
 double Timer::GetTime( unsigned idx ) const {
     if( not IsActive(idx) )
         return timers_[idx];
