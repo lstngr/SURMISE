@@ -85,10 +85,10 @@ SError Simulation::Run() {
             delete[] sbuf;
         }
         timer_->SetTimer( T_OUTPUT, MPI_Wtime() - wtime );
-        MPI_Barrier( MPI_COMM_WORLD );
         timer_->StopTimer( T_ITER );
         // If sufficient unbalancing, recompute indicies.
         // If time elapsed, cleanfully exit
+        MPI_Barrier( MPI_COMM_WORLD );
         if( MPI_Wtime()-start_time > conf_.max_wtime - conf_.extra_time ){
             if( rank==0 )
                 std::cout << "[" << MPI_Wtime() << "s] Run time elapsed, aborting"
