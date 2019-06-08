@@ -166,20 +166,22 @@ SError IOManager::DistributeParticles( Simulation& sim ) {
     int rank,size;
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
-    Particle buf[conf_.npart];
+    Particle *buf = new Particle[conf_.npart];
     if( rank==0 ) {
         for( unsigned ip(0); ip<conf_.npart; ip++ ) {
             buf[ip] = *(conf_.parts[ip]);
             buf[ip].id = conf_.parts[ip]->id;
         }
     }
-    MPI_Bcast( &buf, conf_.npart, MPI_Particle, 0, MPI_COMM_WORLD );
+    MPI_Bcast( buf, conf_.npart, MPI_Particle, 0, MPI_COMM_WORLD );
     if( rank>0 ) {
-        for( const auto& p : buf ) {
+        for( unsigned i(0); i<conf_.npart; i++ ) {
+            const Particle& p( buf[i] );
             conf_.parts.push_back( new Particle(p) );
             conf_.parts.back()->id = p.id;
         }
     }
+    delete[] buf;
     sim.BuildTree();
     unsigned upsize[2];
     upsize[0] = std::floor( (double)conf_.npart / (double)size );
