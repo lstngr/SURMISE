@@ -40,8 +40,13 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
     std::ofstream particles, tree, timers;
+    std::cout << "CPU" << rank << " begins writing." << std::endl;
+    SError err(E_SUCCESS);
     OpenStream( particles, conf_.opath + ".leafs." + std::to_string(write_iter) );
+    if( err ){ return err; }
     OpenStream( tree, conf_.opath + ".tree." + std::to_string(write_iter) );
+    if( err ){ return err; }
+    std::cout << "CPU" << rank << " opened outstreams." << std::endl;
     if( sim.timer_ != NULL )
         OpenStream( timers, conf_.opath + ".timers." + std::to_string(write_iter) );
     // Get Root of the tree
@@ -59,55 +64,55 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
         pptr = sim.tree_->GetNextLeaf( pptr );
     }
     // TREE PRINTING
-    tree << tptr << "," << tptr->children_[0] << ","
-        << tptr->children_[1] << ","
-        << tptr->children_[2] << ","
-        << tptr->children_[3] << std::endl;
-    bool print_tree(true);
-    while(print_tree) {
-        // Goes as deep as it can, prints all nodes when stepping down.
-        if( not tptr->IsLeaf() ) {
-            for( unsigned ic(0); ic<4; ic++ ) {
-                if( tptr->GetChild(ic) != NULL ) {
-                    tptr = tptr->GetChild(ic);
-                    tree << tptr << "," << tptr->children_[0] << ","
-                        << tptr->children_[1] << ","
-                        << tptr->children_[2] << ","
-                        << tptr->children_[3] << std::endl;
-                    break;
-                }
-            }
-        } else {
-            // We reached a leaf. Need to go up until we can move again.
-            bool go_up(true);
-            while(go_up){
-                // If we're at the root, cannot climb
-                if(tptr->IsRoot()){
-                    print_tree=false;
-                    break;
-                }
-                // Else get the parent.
-                // Figure out our index from parent
-                unsigned icur(tptr->GetParent()->GetQuadrant(tptr));
-                tptr = tptr->GetParent();
-                for( unsigned ic(icur+1); ic<4; ic++ ) {
-                    if( tptr->GetChild(ic) != NULL ){
-                        // Found a child from parent
-                        tptr = tptr->GetChild(ic);
-                        tree << tptr << "," << tptr->children_[0] << ","
-                            << tptr->children_[1] << ","
-                            << tptr->children_[2] << ","
-                            << tptr->children_[3] << std::endl;
-                        go_up = false;
-                        break;
-                    }
-                }
-                // Here, we're about to redo the while.
-                // If go_up = false, we found a child to go to.
-                // Else, the routine restarts and goes up one other level.
-            }
-        }
-    }
+    // tree << tptr << "," << tptr->children_[0] << ","
+    //     << tptr->children_[1] << ","
+    //     << tptr->children_[2] << ","
+    //     << tptr->children_[3] << std::endl;
+    // bool print_tree(true);
+    // while(print_tree) {
+    //     // Goes as deep as it can, prints all nodes when stepping down.
+    //     if( not tptr->IsLeaf() ) {
+    //         for( unsigned ic(0); ic<4; ic++ ) {
+    //             if( tptr->GetChild(ic) != NULL ) {
+    //                 tptr = tptr->GetChild(ic);
+    //                 tree << tptr << "," << tptr->children_[0] << ","
+    //                     << tptr->children_[1] << ","
+    //                     << tptr->children_[2] << ","
+    //                     << tptr->children_[3] << std::endl;
+    //                 break;
+    //             }
+    //         }
+    //     } else {
+    //         // We reached a leaf. Need to go up until we can move again.
+    //         bool go_up(true);
+    //         while(go_up){
+    //             // If we're at the root, cannot climb
+    //             if(tptr->IsRoot()){
+    //                 print_tree=false;
+    //                 break;
+    //             }
+    //             // Else get the parent.
+    //             // Figure out our index from parent
+    //             unsigned icur(tptr->GetParent()->GetQuadrant(tptr));
+    //             tptr = tptr->GetParent();
+    //             for( unsigned ic(icur+1); ic<4; ic++ ) {
+    //                 if( tptr->GetChild(ic) != NULL ){
+    //                     // Found a child from parent
+    //                     tptr = tptr->GetChild(ic);
+    //                     tree << tptr << "," << tptr->children_[0] << ","
+    //                         << tptr->children_[1] << ","
+    //                         << tptr->children_[2] << ","
+    //                         << tptr->children_[3] << std::endl;
+    //                     go_up = false;
+    //                     break;
+    //                 }
+    //             }
+    //             // Here, we're about to redo the while.
+    //             // If go_up = false, we found a child to go to.
+    //             // Else, the routine restarts and goes up one other level.
+    //         }
+    //     }
+    // }
     // TIMER PRINTING
     if( sim.timer_ != NULL ) {
         double *sbuf(NULL), *rbuf(NULL);
@@ -118,7 +123,7 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
             sbuf[i_timer] = sim.timer_->GetTime(i_timer);
         MPI_Gather( sbuf, T_COUNT, MPI_DOUBLE, rbuf, T_COUNT, MPI_DOUBLE, 0, MPI_COMM_WORLD );
         delete[] sbuf;
-        for( unsigned ip(0); ip<size; ip++ ) {
+        for( int ip(0); ip<size; ip++ ) {
             timers << ip << std::setprecision(8);
             for( unsigned it(0); it<T_COUNT; it++ ) {
                 timers << "," << rbuf[ip*T_COUNT+it];
@@ -247,15 +252,15 @@ SError IOManager::SyncLeafs( Simulation& sim ) {
         }
     }
     MPI_Barrier( MPI_COMM_WORLD );
-    MPI_Request send_req[size];
-    for( unsigned i(0); i<size; i++ ){
+    MPI_Request *send_req = new MPI_Request[size];
+    for( int i(0); i<size; i++ ){
         if( i!=rank ){
             MPI_Isend( send_buf, bsizes[rank], MPI_Particle, i, 0,
                     MPI_COMM_WORLD, &send_req[i] );
         }
     }
     MPI_Barrier( MPI_COMM_WORLD );
-    for( unsigned i(0); i<size; i++ ){
+    for( int i(0); i<size; i++ ){
         if( i!=rank ){
             recv_buf = new Particle[bsizes[i]];
             MPI_Status stat;
@@ -278,89 +283,7 @@ SError IOManager::SyncLeafs( Simulation& sim ) {
     }
     delete[] bsizes;
     delete[] send_buf;
-    return E_SUCCESS;
-}
-
-SError IOManager::DistributeTree( const Simulation& sim ) {
-    int rank,size;
-    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    MPI_Comm_size( MPI_COMM_WORLD, &size );
-    // Compute buffer sizes for particle transfer
-    int bsize[2];
-    // Implement uniform distribution of particles to start with
-    bsize[0] = std::floor( (double)conf_.npart / (double)size );
-    bsize[1] = bsize[0] + conf_.npart%size;
-    if( rank==0 ) {
-        std::cout << "CPU" << rank
-            << " sends particles that other CPU should expect."
-            << std::endl;
-        Node *ptr( sim.tree_->GetNextLeaf( sim.tree_->GetRoot() ) );
-        for( unsigned iskip(0); iskip<bsize[0]; iskip++ ) {
-            std::cout << "  " << rank << ": Skipping " << *(ptr->GetParticle())
-                << std::endl;
-            ptr = sim.tree_->GetNextLeaf( ptr );
-        }
-        unsigned ip(1); // Starting index of receiving CPU
-        while( ip<size ){
-            unsigned send_size(bsize[ip==size-1]);
-            Particle buf[send_size];
-            unsigned pidx(0);
-            while( ptr != NULL and pidx<send_size ){
-                ///@todo Fix this? We precisely implemented
-                ///the operator= to remove the identifier.
-                unsigned pid( ptr->GetParticle()->id );
-                buf[pidx] = *(ptr->GetParticle());
-                buf[pidx].id = pid;
-                std::cout << "  " << rank << ": Buffering " << buf[pidx]
-                    << std::endl;
-                ptr = sim.tree_->GetNextLeaf( ptr );
-                pidx++;
-            }
-            MPI_Request req;
-            MPI_Isend( buf, send_size, MPI_Particle, ip, 0,
-                    MPI_COMM_WORLD, &req );
-            ip++;
-        }
-    } else {
-        // File requests to get Particles
-        unsigned recv_size(bsize[rank==size-1]);
-        Particle buf[recv_size];
-        MPI_Status s;
-        MPI_Recv( buf, recv_size, MPI_Particle, 0, 0, MPI_COMM_WORLD, &s );
-        std::cout << "CPU" << rank << " received " << bsize[rank==size-1] << " particles from CPU0." << std::endl;
-        for( auto& part : buf ) {
-            std::cout << "  " << rank << ": " << part << std::endl;
-            Particle* newpart = new Particle(part);
-            newpart->id = part.id;
-            conf_.parts.push_back( newpart );
-        }
-    }
-    // Delete removed particles from process zero
-    MPI_Barrier( MPI_COMM_WORLD );
-    if( rank==0 ) {
-        std::cout << "Deleting memory from CPU0." << std::endl;
-        Node* ptr( sim.tree_->GetNextLeaf( sim.tree_->GetRoot() ) );
-        for( unsigned iskip(0); iskip<bsize[0]; iskip++ )
-            ptr = sim.tree_->GetNextLeaf( ptr );
-        while( ptr != NULL ) {
-            std::cout << "  " << rank << ": Removing from memory " <<
-                *(ptr->GetParticle()) << std::endl;
-            std::vector<Particle*>::iterator it( conf_.parts.begin() );
-            while( it != conf_.parts.end() ) {
-                if( (*it)->id == ptr->GetParticle()->id ) {
-                    delete *it;
-                    conf_.parts.erase( it );
-                    break;
-                }
-                it++;
-            }
-            // We need to remove the pointer since it points to a deleted
-            // object. Else, the Node destructor will try to access it and a
-            // segmentation fault will occur.
-            ptr->com_ = NULL;
-            ptr = sim.tree_->GetNextLeaf( ptr );
-        }
-    }
+    delete[] send_req;
     return E_SUCCESS;
 }
 
@@ -458,6 +381,10 @@ SError IOManager::BroadcastConfig() {
  */
 SError IOManager::OpenStream( std::ofstream& ofstrm, const std::string& ofile ) const {
     ofstrm.open( ofile, std::ofstream::out );
+    if( not ofstrm.is_open() ) {
+        std::cout << "Outstream not open. Output failure (skipping)." << std::endl;
+        return E_IOFAILURE;
+    }
     return E_SUCCESS;
 }
 

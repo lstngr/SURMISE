@@ -51,8 +51,8 @@ struct SConfig {
     double extra_time; //!< Extra time (substracted from max_wtime), allows exit routines to be performed peacefully.
     unsigned write_freq; //!< Output frequency. The program will output data every `write_freq` time steps starting from the first iteration.
     std::vector<Particle*> parts; //!< Particles to be simulated.
-    std::string ipath; //!< Input path to the configuration files.
-    std::string opath; //!< Output path where data should be written.
+    std::string ipath={}; //!< Input path to the configuration files.
+    std::string opath={}; //!< Output path where data should be written.
 };
 
 #endif // SURMISE_STYPES
