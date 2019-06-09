@@ -1,6 +1,7 @@
 #! /bin/bash
 #SBATCH --nodes=1
-#SBATCH --ntasks=4
+#SBATCH --ntasks=8
+#SBATCH --mem-per-cpu=1G
 #SBATCH --time=00:10:00
 #SBATCH --partition=debug
 #SBATCH --chdir=/scratch/stenger/SuRMISe
