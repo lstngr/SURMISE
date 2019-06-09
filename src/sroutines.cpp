@@ -66,7 +66,6 @@ SError Simulation::Run() {
     io_.DistributeParticles(*this);
     timer_->StopTimer( T_DISTR );
     for( unsigned iter(0); iter<conf_.max_iter; iter++ ) {
-        std::cout << "CPU" << rank << " ITER" << iter << std::endl;
         timer_->StartTimer( T_ITER );
         ComputeForces();
         TimeEvolution();

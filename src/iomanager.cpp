@@ -40,13 +40,11 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
     std::ofstream particles, tree, timers;
-    std::cout << "CPU" << rank << " begins writing." << std::endl;
     SError err(E_SUCCESS);
     OpenStream( particles, conf_.opath + ".leafs." + std::to_string(write_iter) );
     if( err ){ return err; }
     OpenStream( tree, conf_.opath + ".tree." + std::to_string(write_iter) );
     if( err ){ return err; }
-    std::cout << "CPU" << rank << " opened outstreams." << std::endl;
     if( sim.timer_ != NULL )
         OpenStream( timers, conf_.opath + ".timers." + std::to_string(write_iter) );
     // Get Root of the tree
