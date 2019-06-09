@@ -22,7 +22,8 @@ enum SError {
      * complete. For example, if the main Simulation::Run routine still runs
      * when the maximum allocated amount of time in the configuration is
      * reached.*/
-    E_TIMEOUT = 2
+    E_TIMEOUT = 2,
+    E_IOFAILURE = 3
 };
 
 #endif // SURMISE_SERRORS_HPP_

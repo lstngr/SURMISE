@@ -40,10 +40,13 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
     std::ofstream particles, tree, timers;
-    std::cout << "CPU" << rank << " Will open stream " << conf_.opath + ".leafs." + std::to_string(write_iter) << std::endl;
+    std::cout << "CPU" << rank << " begins writing." << std::endl;
+    SError err(E_SUCCESS);
     OpenStream( particles, conf_.opath + ".leafs." + std::to_string(write_iter) );
-    std::cout << "CPU" << rank << " Will open stream " << conf_.opath + ".tree." + std::to_string(write_iter) << std::endl;
+    if( err ){ return err; }
     OpenStream( tree, conf_.opath + ".tree." + std::to_string(write_iter) );
+    if( err ){ return err; }
+    std::cout << "CPU" << rank << " opened outstreams." << std::endl;
     if( sim.timer_ != NULL )
         OpenStream( timers, conf_.opath + ".timers." + std::to_string(write_iter) );
     // Get Root of the tree
@@ -61,55 +64,55 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
         pptr = sim.tree_->GetNextLeaf( pptr );
     }
     // TREE PRINTING
-    tree << tptr << "," << tptr->children_[0] << ","
-        << tptr->children_[1] << ","
-        << tptr->children_[2] << ","
-        << tptr->children_[3] << std::endl;
-    bool print_tree(true);
-    while(print_tree) {
-        // Goes as deep as it can, prints all nodes when stepping down.
-        if( not tptr->IsLeaf() ) {
-            for( unsigned ic(0); ic<4; ic++ ) {
-                if( tptr->GetChild(ic) != NULL ) {
-                    tptr = tptr->GetChild(ic);
-                    tree << tptr << "," << tptr->children_[0] << ","
-                        << tptr->children_[1] << ","
-                        << tptr->children_[2] << ","
-                        << tptr->children_[3] << std::endl;
-                    break;
-                }
-            }
-        } else {
-            // We reached a leaf. Need to go up until we can move again.
-            bool go_up(true);
-            while(go_up){
-                // If we're at the root, cannot climb
-                if(tptr->IsRoot()){
-                    print_tree=false;
-                    break;
-                }
-                // Else get the parent.
-                // Figure out our index from parent
-                unsigned icur(tptr->GetParent()->GetQuadrant(tptr));
-                tptr = tptr->GetParent();
-                for( unsigned ic(icur+1); ic<4; ic++ ) {
-                    if( tptr->GetChild(ic) != NULL ){
-                        // Found a child from parent
-                        tptr = tptr->GetChild(ic);
-                        tree << tptr << "," << tptr->children_[0] << ","
-                            << tptr->children_[1] << ","
-                            << tptr->children_[2] << ","
-                            << tptr->children_[3] << std::endl;
-                        go_up = false;
-                        break;
-                    }
-                }
-                // Here, we're about to redo the while.
-                // If go_up = false, we found a child to go to.
-                // Else, the routine restarts and goes up one other level.
-            }
-        }
-    }
+    // tree << tptr << "," << tptr->children_[0] << ","
+    //     << tptr->children_[1] << ","
+    //     << tptr->children_[2] << ","
+    //     << tptr->children_[3] << std::endl;
+    // bool print_tree(true);
+    // while(print_tree) {
+    //     // Goes as deep as it can, prints all nodes when stepping down.
+    //     if( not tptr->IsLeaf() ) {
+    //         for( unsigned ic(0); ic<4; ic++ ) {
+    //             if( tptr->GetChild(ic) != NULL ) {
+    //                 tptr = tptr->GetChild(ic);
+    //                 tree << tptr << "," << tptr->children_[0] << ","
+    //                     << tptr->children_[1] << ","
+    //                     << tptr->children_[2] << ","
+    //                     << tptr->children_[3] << std::endl;
+    //                 break;
+    //             }
+    //         }
+    //     } else {
+    //         // We reached a leaf. Need to go up until we can move again.
+    //         bool go_up(true);
+    //         while(go_up){
+    //             // If we're at the root, cannot climb
+    //             if(tptr->IsRoot()){
+    //                 print_tree=false;
+    //                 break;
+    //             }
+    //             // Else get the parent.
+    //             // Figure out our index from parent
+    //             unsigned icur(tptr->GetParent()->GetQuadrant(tptr));
+    //             tptr = tptr->GetParent();
+    //             for( unsigned ic(icur+1); ic<4; ic++ ) {
+    //                 if( tptr->GetChild(ic) != NULL ){
+    //                     // Found a child from parent
+    //                     tptr = tptr->GetChild(ic);
+    //                     tree << tptr << "," << tptr->children_[0] << ","
+    //                         << tptr->children_[1] << ","
+    //                         << tptr->children_[2] << ","
+    //                         << tptr->children_[3] << std::endl;
+    //                     go_up = false;
+    //                     break;
+    //                 }
+    //             }
+    //             // Here, we're about to redo the while.
+    //             // If go_up = false, we found a child to go to.
+    //             // Else, the routine restarts and goes up one other level.
+    //         }
+    //     }
+    // }
     // TIMER PRINTING
     if( sim.timer_ != NULL ) {
         double *sbuf(NULL), *rbuf(NULL);
@@ -378,6 +381,10 @@ SError IOManager::BroadcastConfig() {
  */
 SError IOManager::OpenStream( std::ofstream& ofstrm, const std::string& ofile ) const {
     ofstrm.open( ofile, std::ofstream::out );
+    if( not ofstrm.is_open() ) {
+        std::cout << "Outstream not open. Output failure (skipping)." << std::endl;
+        return E_IOFAILURE;
+    }
     return E_SUCCESS;
 }
 
