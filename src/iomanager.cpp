@@ -40,7 +40,9 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
     std::ofstream particles, tree, timers;
+    std::cout << "CPU" << rank << " Will open stream " << conf_.opath + ".leafs." + std::to_string(write_iter) << std::endl;
     OpenStream( particles, conf_.opath + ".leafs." + std::to_string(write_iter) );
+    std::cout << "CPU" << rank << " Will open stream " << conf_.opath + ".tree." + std::to_string(write_iter) << std::endl;
     OpenStream( tree, conf_.opath + ".tree." + std::to_string(write_iter) );
     if( sim.timer_ != NULL )
         OpenStream( timers, conf_.opath + ".timers." + std::to_string(write_iter) );
