@@ -40,19 +40,16 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
     std::ofstream particles, tree, timers;
-    std::cout << "CPU" << rank << " begins writing." << std::endl;
     SError err(E_SUCCESS);
     OpenStream( particles, conf_.opath + ".leafs." + std::to_string(write_iter) );
     if( err ){ return err; }
     OpenStream( tree, conf_.opath + ".tree." + std::to_string(write_iter) );
     if( err ){ return err; }
-    std::cout << "CPU" << rank << " opened outstreams." << std::endl;
     if( sim.timer_ != NULL )
         OpenStream( timers, conf_.opath + ".timers." + std::to_string(write_iter) );
     // Get Root of the tree
     Node* pptr(sim.tree_->GetRoot());
     pptr = sim.tree_->GetNextLeaf( pptr );
-    Node* tptr(sim.tree_->GetRoot());
     // PARTICLE PRINTING
     // Iterate over tree (GetNextLeaf) until found all papptricles.
     while( pptr!=NULL ) {
@@ -64,6 +61,7 @@ SError IOManager::WriteOutput( const Simulation& sim ) {
         pptr = sim.tree_->GetNextLeaf( pptr );
     }
     // TREE PRINTING
+    // Node* tptr(sim.tree_->GetRoot());
     // tree << tptr << "," << tptr->children_[0] << ","
     //     << tptr->children_[1] << ","
     //     << tptr->children_[2] << ","
@@ -281,6 +279,7 @@ SError IOManager::SyncLeafs( Simulation& sim ) {
             delete[] recv_buf;
         }
     }
+    MPI_Barrier( MPI_COMM_WORLD );
     delete[] bsizes;
     delete[] send_buf;
     delete[] send_req;
@@ -324,7 +323,7 @@ SError IOManager::GenerateConfig( const std::string& file ) {
     // Particle array is dynamically allocated and should match input file size.
     conf_.parts.reserve(conf_.npart);
     std::ifstream ifsp( ifile );
-    for( size_t ip(0); ip < conf_.npart; ip++  ) {
+    for( long ip(0); ip < conf_.npart; ip++  ) {
         conf_.parts.push_back( new Particle );
         conf_.parts.back()->id = ip;
         ifsp >> conf_.parts.back()->pos[0]
