@@ -22,7 +22,7 @@ We suppose the output writing functions are responsible for this (high system
 time), since CPU0 writes while other processes need to wait, and retry with no
 outputs.
 
-| N CPU |  Real  |  User  | System  | SpeedUp |
+| N CPU | Real   | User   | System  | SpeedUp |
 | ----: | :----: | :----: | :-----: | :-----: |
 | 1     | 15.80s | 15.52s | 0.133s  | 1.000   |
 | 2     | 9.036s | 17.70s | 0.159s  | 1.749   |
@@ -36,16 +36,54 @@ python_timings timing investigation \endlink for more details.
 
 @section scalings_deneb Scalings with More Cores
 
-Some runs indicate similar scalings as before without output to files, but due
-to frequent crashes that I fail to diagnose, this section is left empty.
+Strong scaling up to 64 cores. We use a uniform and clustered sets of 1e6
+particles each. The execution time is again measured with the `time` command.
+The reported times are the ones from the user portion (the only relevant one,
+since the rest of the execution is managed by the SLURM).
+Ten iterations of the main loop were executed each time.
+
+| CPUs | Nodes | Uniform | Speedup | Clustered | Speedup |
+| :-:  | :-:   | :-:     | :-:     | :-:       | :-:     |
+| 1    | 1     | 197.2s  | 1.000   | 83.74s    | 1.000   |
+| 2    | 1     | 115.6s  | 1.706   | 63.63s    | 1.316   |
+| 4    | 1     | 72.73s  | 2.711   | 56.56s    | 1.480   |
+| 8    | 1     | 58.50s  | 3.371   | 52.52s    | 1.594   |
+| 16   | 1     | 48.09s  | 4.101   | 49.51s    | 1.691   |
+| 32   | 2     | 49.77s  | 3.962   | 50.82s    | 1.648   |
+| 64   | 4     |         |         | 57.39s    | 1.459   |
+
+\image html strong.png
+
+Weak scaling for the problem of uniformly distributed masses (cluster set is not
+shuffled, so we'd suppress one globe by selecting fewer particles in the
+configuration file).
+We run with 8 CPUs and 10 up to 1e6 particles (logarithmically increasing), and
+theta=0.4.
+
+| Particles | Total Time | Time per CPU |
+| :-:       | :-:        | :-:          |
+| 10        | 2.366s     | 0.295s       |
+| 30        | 2.082s     | 0.260s       |
+| 100       | 2.149s     | 0.268s       |
+| 300       | 2.295s     | 0.286s       |
+| 1000      | 3.175s     | 0.396s       |
+| 3000      | 2.542s     | 0.317s       |
+| 10000     | 2.528s     | 0.316s       |
+| 30000     | 3.357s     | 0.419s       |
+| 100000    | 6.703s     | 0.837s       |
+| 300000    | 17.382s    | 2.172s       |
+| 1000000   | 58.501s    | 7.312s       |
+
+\image html weak.png
 
 @section python_timings Time Distribution
 
-Below, we plot the timings when the program outputs every iteration. We clearly
-see that the workload on CPU0 (which writes) is the highest. The second most
-important contribution (overall) comes from the computation of the forces. (Note
-T_DISTR, the time to distribute particles across MPI instances is constant since
-only read before the main iteration).
+Below, we plot the timings when the program outputs every five iterations and
+runs with a large (1e6) number of particles. We clearly see that the workload on
+CPU0 (which writes) is the highest. The second most important contribution
+(overall) comes from the computation of the forces. (Note T_DISTR, the time to
+distribute particles across MPI instances is constant since only read before the
+main iteration).
 \image html tpercpu.png
 \image html tpertask.png
 \image html tperiter.png
