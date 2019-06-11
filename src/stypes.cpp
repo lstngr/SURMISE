@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <cmath>
 #include "stypes.hpp"
 #include "serrors.hpp"

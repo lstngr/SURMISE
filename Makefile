@@ -3,8 +3,8 @@ export DOXY_VERSION=$(shell git describe --abbrev=8 --dirty --always --tags)
 export OMPI_CXX=g++
 #export OMPI_CXX=clang++
 
-CXX=mpic++
-CXXFLAGS=-std=c++11 -Wall -pedantic -O3# -D_GLIBCXX_DEBUG #-fno-stack-protector
+CXX=mpicxx
+CXXFLAGS=-std=c++11 -g -Wall -pedantic -Og# -D_GLIBCXX_DEBUG #-fno-stack-protector
 LDFLAGS=
 LDLIBS=
 
