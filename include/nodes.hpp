@@ -36,7 +36,7 @@ class Node {
         bool IsRoot() const;
         bool IsLeaf() const;
         Particle* GetParticle() const;
-        std::array<double,2> GetCenterOfMass() const;
+        const std::array<double,2>& GetCenterOfMass() const;
         std::array<double,4> GetBounds() const;
         long long GetLevel() const;
         long long GetIndex() const;

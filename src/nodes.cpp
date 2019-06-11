@@ -120,7 +120,7 @@ Particle* Node::GetParticle() const {
 /** @brief Returns the center of mass of the node, which is gotten from the
  * local Particle object.
  */
-std::array<double,2> Node::GetCenterOfMass() const {
+const std::array<double,2>& Node::GetCenterOfMass() const {
     return this->com_->pos;
 }
 
