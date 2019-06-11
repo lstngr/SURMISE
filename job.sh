@@ -11,4 +11,4 @@ module load intel intel-mpi #totalview
 # tvscript -event_action "error=>display_backtrace -show_arguments -show_locals" -mpi SLURM -tasks ${SLURM_NTASKS} bin/surmise -a input/clusters
 # sed -i 's/^npart=.*$/npart=300000/' input/vlargeuniform.conf
 # time srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} bin/surmise input/vlargeuniform
-srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} amplxe-cl -collect hotspots -r /scratch/stenger/SuRMISe/vtune16/ -- bin/surmise input/clusters
+srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} amplxe-cl -collect hotspots -r /scratch/stenger/SuRMISe/vtune16_no_output/ -- bin/surmise input/clusters

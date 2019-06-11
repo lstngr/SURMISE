@@ -75,14 +75,16 @@ SError Simulation::Run() {
         timer_->StopTimer( T_LEAFSYNC );
         UpdateTree();
         timer_->StartTimer( T_OUTPUT );
-        if(rank==0 and iter%conf_.write_freq==0 ){
-            io_.WriteOutput( *this );
-        } else if( iter%conf_.write_freq==0 ){
-            double *sbuf(new double[T_COUNT]), *rbuf(NULL);
-            for( unsigned i_timer(0); i_timer<T_COUNT; i_timer++ )
-                sbuf[i_timer] = timer_->GetTime(i_timer);
-            MPI_Gather( sbuf, T_COUNT, MPI_DOUBLE, rbuf, T_COUNT, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-            delete[] sbuf;
+        if( conf_.write_freq ) {
+            if(rank==0 and iter%conf_.write_freq==0 ){
+                io_.WriteOutput( *this );
+            } else if( iter%conf_.write_freq==0 ){
+                double *sbuf(new double[T_COUNT]), *rbuf(NULL);
+                for( unsigned i_timer(0); i_timer<T_COUNT; i_timer++ )
+                    sbuf[i_timer] = timer_->GetTime(i_timer);
+                MPI_Gather( sbuf, T_COUNT, MPI_DOUBLE, rbuf, T_COUNT, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+                delete[] sbuf;
+            }
         }
         timer_->StopTimer( T_OUTPUT );
         timer_->StopTimer( T_ITER );

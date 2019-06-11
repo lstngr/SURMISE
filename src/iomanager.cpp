@@ -314,8 +314,6 @@ SError IOManager::GenerateConfig( const std::string& file ) {
     conf_.max_wtime  = cfg.get<double>("walltime");
     conf_.extra_time = cfg.get<double>("extratime");
     conf_.write_freq = cfg.get<unsigned>("write_freq");
-    if( not conf_.write_freq )
-        conf_.write_freq = 1;
     std::cout << "Read write_freq=" << conf_.write_freq << std::endl;
     conf_.ipath      = file;
     conf_.opath      = cfg.get<std::string>("output_path") + oname;
