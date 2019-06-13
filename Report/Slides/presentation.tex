@@ -2,6 +2,8 @@
 % -- Load packages -- %
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{appendixnumberbeamer}
+\usepackage{listings}
 \usepackage{lmodern,fontspec}
 \usepackage{amsmath,amsfonts,amssymb}
 \usepackage{caption,graphicx,tikz}
@@ -18,21 +20,41 @@ citestyle=authoryear]{biblatex}
 \useoutertheme{metropolis}
 \usefonttheme{metropolis}
 \usecolortheme{metropolis}
-\setsansfont[Path=/usr/share/fonts/TTF/,BoldFont={FiraSans-Bold.ttf}]{FiraSans-Light.ttf}
+\setsansfont[Path=/usr/share/fonts/TTF/,
+BoldFont={FiraSans-Bold.ttf},
+ItalicFont={FiraSans-LightItalic.ttf},
+BoldItalicFont={FiraSans-BoldItalic.ttf}]{FiraSans-Light.ttf}
 \setmonofont[Path=/usr/share/fonts/TTF/]{FiraMono-Regular.ttf}
+\definecolor{mCustomBrown}{HTML}{5e3208}
+\setbeamercolor{palette custom}{%
+	use=normal text,
+	fg=normal text.bg,
+	bg=mCustomBrown
+}
+\setbeamercolor{frametitle}{%
+	use=palette custom,
+	parent=palette custom
+}
+\setbeamercolor{palette primary}{%
+	use=palette custom,
+	parent=palette custom,
+	bg=mCustomBrown
+}
+% -- Listings configuration -- %
+\lstset{basicstyle=\small}
 % -- Custom commands -- %
 \newcommand{\mvec}[1]{\mathbf{#1}}
 \begin{document}
 	\author{Louis Stenger}
 	\title{2D N-Body Gravity Problem Solver}
-	%\subtitle{SuRMISe}
+	\subtitle{SuRMISe}
 	%\logo{}
 	\institute{École Polytechnique Fédérale de Lausanne}
 	\date{\formatdate{20}{6}{2019}}
 	%\subject{}
 	%\setbeamercovered{transparent}
 	%\setbeamertemplate{navigation symbols}{}
-	\begin{frame}[plain]
+	\begin{frame}
 		\maketitle
 	\end{frame}
 	
@@ -48,9 +70,14 @@ citestyle=authoryear]{biblatex}
 	\input{incl/performance.tex}
 	% ------------------ %
 	\input{incl/conclusion.tex}
-	
+	% ------------------ %
+	\begin{frame}[standout]
+		Questions?
+	\end{frame}
 	\begin{frame}[t,allowframebreaks]
 		\frametitle{References}
 		\printbibliography
 	\end{frame}
+	% ------------------ %
+	\input{incl/appendix.tex}
 \end{document}
