@@ -1,0 +1,23 @@
+-   95.79%     2.11%  surmise  surmise   [.] RootNode::TimeEvolution
+   - 93.69% RootNode::TimeEvolution
+      + 49.00% Node::Interact
+      - 35.54% Node::GetIN
+         - 14.46% Node::IsNN
+              4.55% Node::GetBounds
+         - 8.04% Node::GetNN
+            - 5.91% Node::Move
+               - 3.21% Node::Move
+                  - 1.56% Node::Move
+                       0.72% Node::Move
+      - 1.22% Node::TimeEvolution
+           Node::TimeEvolution
+           Node::TimeEvolution
+           Node::TimeEvolution
+         - Node::TimeEvolution
+            - Node::TimeEvolution
+               - 1.22% Node::TimeEvolution
+                  - 1.22% Node::TimeEvolution
+                     - 1.21% Node::TimeEvolution
+                        - 1.18% Node::TimeEvolution
+                           - 1.04% Node::TimeEvolution
+                                0.76% LeafNode::TimeEvolution

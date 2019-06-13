@@ -1,0 +1,6 @@
+-   37.42%    37.36%  surmise  surmise              [.] RootNode::TimeEvolution
+     36.97% RootNode::TimeEvolution
+-   26.86%    26.75%  surmise  surmise              [.] Node::GetIN
+     26.72% Node::GetIN
+-   18.35%    17.77%  surmise  surmise              [.] Node::Move
+     18.14% Node::Move
