@@ -1,0 +1,56 @@
+\documentclass[11pt]{beamer}
+% -- Load packages -- %
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,fontspec}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{caption,graphicx,tikz}
+\usepackage[nodayofweek,level]{datetime}
+\usepackage{cleveref,hyperref}
+\usepackage[backend=bibtex,%
+style=alphabetic,%
+citestyle=authoryear]{biblatex}
+\addbibresource{bibliography.bib}
+% -- Tikz packages -- %
+% -- Theme configuration -- %
+\usetheme{metropolis}
+\useinnertheme{metropolis}
+\useoutertheme{metropolis}
+\usefonttheme{metropolis}
+\usecolortheme{metropolis}
+\setsansfont[Path=/usr/share/fonts/TTF/,BoldFont={FiraSans-Bold.ttf}]{FiraSans-Light.ttf}
+\setmonofont[Path=/usr/share/fonts/TTF/]{FiraMono-Regular.ttf}
+% -- Custom commands -- %
+\newcommand{\mvec}[1]{\mathbf{#1}}
+\begin{document}
+	\author{Louis Stenger}
+	\title{2D N-Body Gravity Problem Solver}
+	%\subtitle{SuRMISe}
+	%\logo{}
+	\institute{École Polytechnique Fédérale de Lausanne}
+	\date{\formatdate{20}{6}{2019}}
+	%\subject{}
+	%\setbeamercovered{transparent}
+	%\setbeamertemplate{navigation symbols}{}
+	\begin{frame}[plain]
+		\maketitle
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Table of Contents}
+		\tableofcontents
+	\end{frame}
+	% ------------------ %
+	\input{incl/introduction.tex}
+	% ------------------ %
+	\input{incl/implementation.tex}
+	% ------------------ %
+	\input{incl/performance.tex}
+	% ------------------ %
+	\input{incl/conclusion.tex}
+	
+	\begin{frame}[t,allowframebreaks]
+		\frametitle{References}
+		\printbibliography
+	\end{frame}
+\end{document}

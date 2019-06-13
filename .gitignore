@@ -26,6 +26,14 @@ tags
 /Report/**/*.aux
 /Report/**/*.log
 /Report/**/*.gz
+/Report/**/*blx.bib
+/Report/**/*.nav
+/Report/**/*.run.xml
+/Report/**/*.bbl
+/Report/**/*.blg
+/Report/**/*.snm
+/Report/**/*.toc
+/Report/**/*.bcf
 # Jupyter shitty extensions
 .ipynb_checkpoints
 # SLURM

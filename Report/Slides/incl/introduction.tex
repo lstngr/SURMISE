@@ -1,0 +1,72 @@
+\section{Problem Description}
+
+\begin{frame}
+	\frametitle{Physics}
+	A set of $N$ massive bodies (``particles''), $m_i$, with positions $\mvec{r}_i=(x_i,y_i)$, $i=0,\ldots,N-1$ are subjected to a symmetric gravitational force, $i\neq j$
+	\begin{align*}
+		\mvec{F}_{j\rightarrow i} &= G\frac{m_im_j}{r^2}\mvec{r},\\
+		\mvec{r} &= \mvec{r}_j-\mvec{r}_i.
+	\end{align*}
+	Considering all the particles,
+	\begin{align*}
+		\mvec{F}_i = \sum_{j\neq i} \mvec{F}_{j\rightarrow i}.
+	\end{align*}
+	We consider $G=1$ in the following. Note the force scales as $r^{-1}$, not $r^{-2}$ as in three dimensions.
+\end{frame}
+
+\begin{frame}
+\frametitle{Algorithm}
+\textbf{Force Computation}:~The ``brute-force'' method has complexity $\mathcal{O}(N^2)$. The selected approximations below reduce the computation complexity.
+\begin{itemize}
+	\item \only<1>{Barnes-Hut Approximation}\only<2->{\alert{Barnes-Hut Approximation}}, $\mathcal{O(N\log{N})}$ \parencite{Barnes1986}
+	\item Fast Multipole Method, $\mathcal{O(N)}$ \parencite{Rokhlin1985}
+	\item Tree-Particle-Mesh Algorithm, $\mathcal{O(N\log{N})}$ \parencite{Bagla2002}
+	\item Adaptive versions of above...
+\end{itemize}
+\pause
+\textbf{Time Evolution}:~Using the \alert{Euler scheme}, from time step $k\to k+1$
+\begin{align}
+	\mvec{r}^{(k+1)}_i &= \mvec{r}^{(k)}_i + \mvec{v}^{(k)}_i\Delta t\\
+	\mvec{v}^{(k+1)}_i &= \mvec{v}^{(k)}_i + \frac{1}{m_i}\mvec{F}^{(k)}_i\Delta t
+\end{align}
+\end{frame}
+
+\begin{frame}
+	\frametitle{The Barnes-Hut (Quad-)Tree}
+	\begin{figure}
+		\centering
+		\begin{tikzpicture}[scale=0.05,%
+			every circle node/.style = {width=3,fill=black}]
+			\input{incl/bh-grid-build.tex}
+		\end{tikzpicture}
+		\caption{Sample 4-level Barnes-Hut grid with 10 particles.}
+		\label{fig:bh-grid}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+	\frametitle{The Barnes-Hut (Quad-)Tree (Cont.)}
+	\begin{figure}
+		\centering
+		\newlength{\lvld}
+		\setlength{\lvld}{7em}
+		\begin{tikzpicture}[level distance=3em,
+		sibling distance=3em,
+		level 1/.style={sibling distance=0.80\lvld},
+		level 2/.style={sibling distance=0.40\lvld},
+		level 3/.style={sibling distance=0.4\lvld},
+		level 4/.style={sibling distance=0.25\lvld},
+		every node/.style = {shape=circle, draw, align=center, color=black,
+			fill=white, scale=0.75}]
+		\input{incl/bh-tree.tex}
+		\end{tikzpicture}
+		\caption{Tree structure associated to the configuration depicted in \cref{fig:bh-grid}.}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Parallelization}
+The problem is parallelized with MPI.
+
+Each process shall handle a fraction of the simulated particles. We aim for $N\sim10^6\to10^7$.
+\end{frame}

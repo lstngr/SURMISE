@@ -1,0 +1,26 @@
+\node {$\mathcal{R}$} %Root
+child { node {} %1SW
+	child { node{0} } %2SW
+	child { node{2} } %2NW
+	child { node{} %2SE
+		child { node{} } %3SW
+		child { node{7} } %3NW
+		child { node{} } %3SE
+		child { node{5} } } %3NE
+	child { node{} } } %2NE
+child { node{} }%1NW
+child { node{8} }%1SE
+child { node{} %1NE
+	child { node{4} } %2SW
+	child { node{} %2NW
+		child { node {1} } %3SW
+		child { node {} } %3NW
+		child { node {} %3SE
+			child { node{6} } %4SW
+			child { node{} } %4NW
+			child { node{9} } %4SE
+			child { node{} } %4SW
+		}
+		child { node {} } }%3NE
+	child { node{3} } %2SE
+	child{ node{} } }; %2NE
