@@ -18,9 +18,9 @@
 \frametitle{Algorithm}
 \textbf{Force Computation}:~The ``brute-force'' method has complexity $\mathcal{O}(N^2)$. The selected approximations below reduce the computation complexity.
 \begin{itemize}
-	\item \only<1>{Barnes-Hut Approximation}\only<2->{\alert{Barnes-Hut Approximation}}, $\mathcal{O(N\log{N})}$ \parencite{Barnes1986}
-	\item Fast Multipole Method, $\mathcal{O(N)}$ \parencite{Rokhlin1985}
-	\item Tree-Particle-Mesh Algorithm, $\mathcal{O(N\log{N})}$ \parencite{Bagla2002}
+	\item \only<1>{Barnes-Hut Approximation}\only<2->{\alert{Barnes-Hut Approximation}}, $\mathcal{O}(N\log{N})$ \parencite{Barnes1986}
+	\item Fast Multipole Method, $\mathcal{O}(N)$ \parencite{Rokhlin1985}
+	\item Tree-Particle-Mesh Algorithm, $\mathcal{O}(N\log{N})$ \parencite{Bagla2002}
 	\item Adaptive versions of above...
 \end{itemize}
 \pause
@@ -31,37 +31,23 @@
 \end{align}
 \end{frame}
 
-\begin{frame}
-	\frametitle{The Barnes-Hut (Quad-)Tree}
-	\begin{figure}
-		\centering
-		\begin{tikzpicture}[scale=0.05,%
-			every circle node/.style = {width=3,fill=black}]
-			\input{incl/bh-grid-build.tex}
-		\end{tikzpicture}
-		\caption{Sample 4-level Barnes-Hut grid with 10 particles.}
-		\label{fig:bh-grid}
-	\end{figure}
-\end{frame}
-
-\begin{frame}
-	\frametitle{The Barnes-Hut (Quad-)Tree (Cont.)}
-	\begin{figure}
-		\centering
-		\newlength{\lvld}
-		\setlength{\lvld}{7em}
-		\begin{tikzpicture}[level distance=3em,
-		sibling distance=3em,
-		level 1/.style={sibling distance=0.80\lvld},
-		level 2/.style={sibling distance=0.40\lvld},
-		level 3/.style={sibling distance=0.4\lvld},
-		level 4/.style={sibling distance=0.25\lvld},
-		every node/.style = {shape=circle, draw, align=center, color=black,
-			fill=white, scale=0.75}]
-		\input{incl/bh-tree.tex}
-		\end{tikzpicture}
-		\caption{Tree structure associated to the configuration depicted in \cref{fig:bh-grid}.}
-	\end{figure}
+\begin{frame}[fragile=singleslide]
+	\frametitle{Algorithm (Cont.)}
+	From the Fast Multipole (v0.5) to Barnes-Hut (v0.7), starting \formatdate{26}{05}{2019} (pre-release).
+	\begin{lstlisting}
+include/iomanager.hpp    |   28 ++++
+include/nodes.hpp        |  122 ++++++---------
+include/sroutines.hpp    |   30 ++++
+include/stypes.hpp       |   22 ++-
+src/config_file.cpp      |    4 +-
+src/iomanager.cpp        |  134 ++++++++++++++++
+src/main.cpp             |    9 +-
+src/nodes.cpp            | 1118 ++++++++++++++++...
+src/sinput.cpp           |    2 +-
+src/sroutines.cpp        |  129 +++++++++++++++
+src/stypes.cpp           |   63 +++++++-
+22 files changed, 1942 insertions(+), 882 deletions(-)
+	\end{lstlisting}
 \end{frame}
 
 \begin{frame}
