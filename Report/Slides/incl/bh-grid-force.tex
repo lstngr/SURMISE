@@ -1,0 +1,42 @@
+% Simulation domain
+\only<1,3->{\draw[thick] (0,0) rectangle (100,100);}
+\only<2>{\draw[thick,fill=red!20!white] (0,0) rectangle (100,100);}
+% Level 1
+\draw[thick] (50,0) -- (50,100);
+\draw[thick] (0,50) -- (100,50);
+\only<3>{\draw[thick,fill=red!20!white] (0,0) rectangle (50,50);}
+\only<12>{\draw[thick,fill=red!20!white] (0,50) rectangle (50,100);}
+\only<13>{\draw[thick,fill=green!20!white] (50,0) rectangle (100,50);}
+\only<14>{\draw[thick,fill=green!20!white] (50,50) rectangle (100,100);}
+% Level 2
+\draw (0,25) -- (100,25);
+\draw (75,0) -- (75,100);
+\draw (25,0) -- (25,50);
+\draw (50,75)-- (100,75);
+\only<4>{\draw[fill=red!20!white] (0,0) rectangle (25,25);}
+\only<5>{\draw[fill=green!20!white] (0,25) rectangle (25,50);}
+\only<6>{\draw[fill=red!20!white] (25,0) rectangle (50,25);}
+\only<11>{\draw[fill=red!20!white] (25,25) rectangle (50,50);}
+% Level 3
+\draw (25,12.5) -- (50,12.5);
+\draw (37.5,0)  -- (37.5,25);
+\draw (62.5,75) -- (62.5,100);
+\draw (50,87.5) -- (75,87.5);
+\only<7>{\draw[fill=red!20!white] (25,0) rectangle (37.5,12.5);}
+\only<8>{\draw[fill=green!20!white] (25,12.5) rectangle (37.5,25);}
+\only<9>{\draw[fill=green!20!white] (37.5,0) rectangle (50,12.5);}
+\only<10>{\draw[fill=red!20!white] (37.5,12.5) rectangle (50,25);}
+% Level 4
+\draw[thin] (68.625,75) -- (68.625,87.5);
+\draw[thin] (62.5,81.125) -- (75,81.125);
+% Particles (by increasing id)
+\draw[fill=red] (16.9664,19.6802) circle (1); %0
+\draw[fill] (54.4110,82.9573) circle (1); %1
+\draw[fill] (03.4614,30.2489) circle (1); %2
+\draw[fill] (81.4564,52.3018) circle (1); %3
+\draw[fill](59.5102,62.4865) circle (1);  %4
+\draw[fill] (40.5800,00.4751) circle (1); %5
+\draw[fill] (64.4035,77.5371) circle (1); %6
+\draw[fill] (36.6343,21.2396) circle (1); %7
+\draw[fill] (99.9970,20.3979) circle (1); %8
+\draw[fill] (70.6045,79.4802) circle (1); %9

@@ -14,7 +14,7 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{The Barnes-Hut (Quad-)Tree}
+	\frametitle{The Barnes-Hut Approximation: Tree Construction}
 	\begin{figure}
 		\centering
 		\begin{tikzpicture}[scale=0.05,%
@@ -27,7 +27,7 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{The Barnes-Hut (Quad-)Tree (Cont.)}
+	\frametitle{The Barnes-Hut Approximation: Tree Construction (Cont.)}
 	\begin{figure}
 		\centering
 		\newlength{\lvld}
@@ -43,7 +43,60 @@
 		\input{incl/bh-tree.tex}
 		\end{tikzpicture}
 		\caption{Tree structure associated to the configuration depicted in \cref{fig:bh-grid}.}
+		\label{fig:bh-tree}
 	\end{figure}
+\end{frame}
+
+\begin{frame}
+	\frametitle{The Barnes-Hut Approximation: Force Computation}
+	\begin{figure}
+		\centering
+		\begin{tikzpicture}[scale=0.035,%
+		every circle node/.style = {width=3,fill=black}]
+			\input{incl/bh-grid-force.tex}
+		\end{tikzpicture}
+		\hspace*{5pt}
+		\setlength{\lvld}{4em}
+		\begin{tikzpicture}[scale=0.7,
+		level distance=3em,
+		sibling distance=3em,
+		level 1/.style={sibling distance=0.90\lvld},
+		level 2/.style={sibling distance=0.50\lvld},
+		level 3/.style={sibling distance=0.5\lvld},
+		level 4/.style={sibling distance=0.4\lvld},
+		every node/.style = {shape=circle, draw, align=center, color=black,
+			fill=white, scale=0.75}]
+		\input{incl/bh-tree-force.tex}
+		\end{tikzpicture}
+		\caption{Hypothetical force computation for one particle of the system, \cref{fig:bh-grid,fig:bh-tree}.}
+		\label{fig:bh-grid-forces}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{The Barnes-Hut Approximation: Tree Update}
+\begin{figure}
+	\centering
+	\begin{tikzpicture}[scale=0.035,%
+	every circle node/.style = {width=3,fill=black}]
+	\input{incl/bh-grid-update.tex}
+	\end{tikzpicture}
+	\hspace*{5pt}
+	\setlength{\lvld}{4em}
+	\begin{tikzpicture}[scale=0.7,
+	level distance=3em,
+	sibling distance=3em,
+	level 1/.style={sibling distance=0.90\lvld},
+	level 2/.style={sibling distance=0.50\lvld},
+	level 3/.style={sibling distance=0.5\lvld},
+	level 4/.style={sibling distance=0.4\lvld},
+	every node/.style = {shape=circle, draw, align=center, color=black,
+		fill=white, scale=0.75}]
+	\input{incl/bh-tree-update.tex}
+	\end{tikzpicture}
+	\caption{Hypothetical tree update for one particle of the system, \cref{fig:bh-grid,fig:bh-tree}.}
+	\label{fig:bh-grid-update}
+\end{figure}
 \end{frame}
 
 \begin{frame}
@@ -95,6 +148,8 @@ Up to v0.5 (FMM attempt), code was written with recursive instructions. With \on
 		\only<2>{\lstinputlisting[basicstyle=\tiny]{incl/perf.o3.hist.0}}
 	\end{column}
 	\begin{column}{0.3\textwidth}
+		$10^5$ particles.
+		
 		\only<1>{\SI{49.92}{\second} per iter.}\only<2>{\SI{6.45}{\second} per iter.}
 		
 		\only<1>{3 iterations sampled:\SI{149.75}{\second}}\only<2>{3 iterations sampled:\SI{129.07}{\second}}
@@ -109,6 +164,22 @@ Up to v0.5 (FMM attempt), code was written with recursive instructions. With \on
 	All methods in the Barnes-Hut code avoid recursive calls.
 	\begin{itemize}
 		\item Much deeper levels possible for unbalanced problems. Stack could become large.
-		\item More switch statements, but removes class inheritance (and thus virtual calls!).
+		\item More conditional statements, but also removes class inheritance (and thus virtual calls, vtables).
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Parallelization Strategy}
+	\begin{itemize}
+		\item Distribute all particles
+		\begin{itemize}
+			\item Minimal modifications
+			\item After initial broadcast, only need to send ``managed'' particles
+		\end{itemize}
+		\item Distribute only managed particles
+		\begin{itemize}
+			\item Requires a \emph{tree completion} routine. Many short messages.
+			\item Master thread or decentralized?
+		\end{itemize}
 	\end{itemize}
 \end{frame}
