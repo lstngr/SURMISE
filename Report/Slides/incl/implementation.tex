@@ -171,15 +171,37 @@ Up to v0.5 (FMM attempt), code was written with recursive instructions. With \on
 \begin{frame}
 	\frametitle{Parallelization Strategy}
 	\begin{itemize}
-		\item Distribute all particles
+		\item Distribute \only<1>{only particles}\only<2>{\alert{only particles}}
 		\begin{itemize}
-			\item Minimal modifications
-			\item After initial broadcast, only need to send ``managed'' particles
+			\item Minimal message size
+			\item Instances need to rebuild their tree (and possibly query missing parts)
+			\item Part of the work is duplicated on each process
 		\end{itemize}
-		\item Distribute only managed particles
+		\item Distribute the nodes
 		\begin{itemize}
-			\item Requires a \emph{tree completion} routine. Many short messages.
-			\item Master thread or decentralized?
+			\item Longer messages, especially for unbalanced problems
+			\item Either compute prerequisites of each process or allow communicating missing parts
 		\end{itemize}
 	\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Parallelization Strategy (Cont.)}
+Particle sending/receiving:
+\begin{itemize}
+	\item Distribute all particles
+	\begin{itemize}
+		\item Minimal modifications to existing code
+		\item After initial broadcast, only need to send ``managed'' particles
+	\end{itemize}
+	\item Distribute only managed particles
+	\begin{itemize}
+		\item Requires a \emph{tree completion} routine. Many short messages.
+		\item Master thread or decentralized?
+	\end{itemize}
+\end{itemize}
+\par
+Particle ordering:~Already ordered along a ``multi-level'' Z-curve when we browse the leaf level. Distribute uniformly.
+\par
+Thread synchronization occurs when syncing leafs (\lstinline|MPI_Barrier| and \lstinline|MPI_Send/Recv|). %TODO-Fill
 \end{frame}
