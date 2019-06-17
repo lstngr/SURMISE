@@ -34,6 +34,7 @@ tags
 /Report/**/*.snm
 /Report/**/*.toc
 /Report/**/*.bcf
+/Report/**/*.vrb
 # Jupyter shitty extensions
 .ipynb_checkpoints
 # SLURM
