@@ -1,20 +1,83 @@
 % Top secret section with extra material for a possible FAQ session at the end.
 \appendix
+\setbeamertemplate{section in toc}{\inserttocsection}
+\metroset{sectionpage=none}
 
 \begin{frame}
-	\frametitle{Problems affecting the code}
-	\begin{itemize}
-		\item When computing a leaf's interaction with a center of mass in an upstream branch (in which the leaf is located), the leaf's contribution to the upstream center of mass is not removed (that is, self-interaction occurs).
-	\end{itemize}
+	\frametitle{Appendix}
+	\tableofcontents
+\end{frame}
+
+\begin{frame}[fragile=singleslide]
+\section{Implementation of BH from the FMM}
+\frametitle{Implementation of BH from the FMM}
+From the Fast Multipole (v0.5) to Barnes-Hut (v0.7), starting \formatdate{26}{05}{2019} (pre-release).
+\begin{lstlisting}
+include/iomanager.hpp    |   28 ++++
+include/nodes.hpp        |  122 ++++++---------
+include/sroutines.hpp    |   30 ++++
+include/stypes.hpp       |   22 ++-
+src/config_file.cpp      |    4 +-
+src/iomanager.cpp        |  134 ++++++++++++++++
+src/main.cpp             |    9 +-
+src/nodes.cpp            | 1118 ++++++++++++++++...
+src/sinput.cpp           |    2 +-
+src/sroutines.cpp        |  129 +++++++++++++++
+src/stypes.cpp           |   63 +++++++-
+22 files changed, 1942 insertions(+), 882 deletions(-)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t]
+	\section{Recursive Methods in the FMM}
+	\frametitle{Recursive Methods in the FMM}
+	Up to v0.5 (FMM attempt), code was written with recursive instructions (and class inheritance). With \only<1>{\lstinline|O0|}\only<2>{\lstinline|O3|},
+	\begin{columns}
+		\begin{column}{0.7\textwidth}
+			\only<1>{\lstinputlisting[basicstyle=\tiny]{incl/perf.o0.hist.0}}
+			\only<2>{\lstinputlisting[basicstyle=\tiny]{incl/perf.o3.hist.0}}
+		\end{column}
+		\begin{column}{0.3\textwidth}
+			$10^5$ particles.
+			
+			\only<1>{\SI{49.92}{\second} per iter.}\only<2>{\SI{6.45}{\second} per iter.}
+			
+			\only<1>{3 iterations sampled:\SI{149.75}{\second}}\only<2>{3 iterations sampled:\SI{129.07}{\second}}
+		\end{column}
+	\end{columns}
+	\only<2>{The compiler ``mysteriously'' destroys the recursive calls with enough optimization.}
 \end{frame}
 
 \begin{frame}
-\frametitle{Why ``SuRMISe''}
-\textbf{Surmise} \footcite{surmise}
-\begin{quote}
-	to guess something, without having much or any proof
-\end{quote}
-\par
-\vspace{1cm}
-Also the acronym for ``\alert{Su}rely \alert{R}uining \alert{M}y \alert{I}mpossible \alert{Se}mester''.
+	\section{Why ``SuRMISe''}
+	\frametitle{Why ``SuRMISe''}
+	\textbf{Surmise} \footcite{surmise}
+	\begin{quote}
+		to guess something, without having much or any proof
+	\end{quote}
+	\par
+	\vspace{1cm}
+	Also the acronym for ``\alert{Su}rely \alert{R}uining \alert{M}y \alert{I}mpossible \alert{Se}mester''.
+\end{frame}
+
+\begin{frame}[fragile]
+	\section{Benchmarking Configuration}
+	\frametitle{Benchmarking Configuration}
+	Benchmarks for the \lstinline|clusters| and \lstinline|vlargeuniform| sets run with
+\begin{lstlisting}
+npart=1000000
+tevol_dt=0.00100000000
+theta=0.400000
+max_iter=10,20
+\end{lstlisting}
+	Compiled with \lstinline|O3|, modules \lstinline|intel, intel-mpi|. Execution time measured with \lstinline|time|, profiling with Intel Amplifier.
+\end{frame}
+
+\begin{frame}
+	\section{Problems affecting the code}
+	\frametitle{Problems affecting the code}
+	\begin{itemize}
+		\item When computing a leaf's interaction with a center of mass in an upstream branch (in which the leaf is located), the leaf's contribution to the upstream center of mass is not removed (that is, self-interaction occurs).
+		\item Cases where only on particle remains in the system are not handled.
+	\end{itemize}
 \end{frame}

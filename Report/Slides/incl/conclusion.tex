@@ -1,13 +1,43 @@
-\section{Wrap-Up}
-\subsection{Main Implementation Features}
-\begin{frame}
-	\frametitle{Strengths and Caveats: Serial}
-\end{frame}
+\section{Wrap Up}
 
 \begin{frame}
+	\frametitle{Strengths and Caveats: Serial}
+	\begin{itemize}
+		%Pro
+		\item[$\bullet$] OOP style makes the code easy to understand
+		\item[$\bullet$] Recursive calls are avoided
+		\item[$\bullet$] No class inheritance
+		\item[$\bullet$] Tree update method to avoid full reconstruction
+		\pause
+		%Neg
+		\item[$\circ$] Non-local memory allocations, pointers
+		\item[$\circ$] Tree update likely looses efficiency for large time steps
+		\item[$\circ$] Poor management of ``extreme'' scenarios (loss of all particles)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
 \frametitle{Strengths and Caveats: Parallel}
+	\begin{itemize}
+		%Pro
+		\item[$\bullet$] Transmitting all particles avoids complex routines (tree completion)
+		\item[$\bullet$] MPI type provided for sending particles (no pointers transmitted)
+		\item[$\bullet$] Duplicated work (tree building, updates) instead of communication time
+		%Neg
+		\item[$\circ$] Large transfers for large system sizes ($\sim\SI{1}{\giga\byte}$ for $10^7$ particles!)
+		\item[$\circ$] No load balancing (incl. removed particles), high spin time
+		\item[$\circ$] Some methods (\lstinline|IsLeaf| ``fails'' in the parallel version)
+	\end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Improvements}
+	The following steps could still be conducted
+	\begin{itemize}
+		\item Managing error-prone scenarios (e.g. loss of all particles)
+		\item Verifying whether a tree update is efficient on very large/dense trees
+		\item Tree completion methods to avoid large transfers
+		\item Load balancing between threads
+		\item MPI-IO
+	\end{itemize}
 \end{frame}

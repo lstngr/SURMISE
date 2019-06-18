@@ -139,28 +139,8 @@
 	\onslide<3->{However, the ``physical'' particles being simulated are kept local to another in a separate storage (in \lstinline|SConfig|).}
 \end{frame}
 
-\begin{frame}[t]
-\frametitle{Recursion}
-Up to v0.5 (FMM attempt), code was written with recursive instructions. With \only<1>{\lstinline|O0|}\only<2>{\lstinline|O3|},
-\begin{columns}
-	\begin{column}{0.7\textwidth}
-		\only<1>{\lstinputlisting[basicstyle=\tiny]{incl/perf.o0.hist.0}}
-		\only<2>{\lstinputlisting[basicstyle=\tiny]{incl/perf.o3.hist.0}}
-	\end{column}
-	\begin{column}{0.3\textwidth}
-		$10^5$ particles.
-		
-		\only<1>{\SI{49.92}{\second} per iter.}\only<2>{\SI{6.45}{\second} per iter.}
-		
-		\only<1>{3 iterations sampled:\SI{149.75}{\second}}\only<2>{3 iterations sampled:\SI{129.07}{\second}}
-	\end{column}
-\end{columns}
-\end{frame}
-
 \begin{frame}
-	\frametitle{Recursion (Cont.)}
-	The compiler ``mysteriously'' destroys the recursive calls with enough optimization.
-	
+	\frametitle{Recursion}
 	All methods in the Barnes-Hut code avoid recursive calls.
 	\begin{itemize}
 		\item Much deeper levels possible for unbalanced problems. Stack could become large.
@@ -204,4 +184,20 @@ Particle sending/receiving:
 Particle ordering:~Already ordered along a ``multi-level'' Z-curve when we browse the leaf level. Distribute uniformly.
 \par
 Thread synchronization occurs when syncing leafs (\lstinline|MPI_Barrier| and \lstinline|MPI_Send/Recv|). %TODO-Fill
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Parallelization Strategy (Cont.)}
+Define a type for particles, \lstinline|MPI_Particle|.
+	\begin{columns}
+		\begin{column}{0.4\textwidth}
+			\begin{figure}
+				\centering
+				\includegraphics[width=\textwidth]{inclfigs/particle.png}
+			\end{figure}
+		\end{column}
+		\begin{column}{0.6\textwidth}
+			\lstinline|sizeof(double)=|\SI{8}{\byte}, \lstinline|sizeof(long)=|\SI{4}{\byte}.
+	\end{column}
+	\end{columns}
 \end{frame}

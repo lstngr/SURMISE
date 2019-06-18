@@ -31,25 +31,6 @@
 \end{align}
 \end{frame}
 
-\begin{frame}[fragile=singleslide]
-	\frametitle{Algorithm (Cont.)}
-	From the Fast Multipole (v0.5) to Barnes-Hut (v0.7), starting \formatdate{26}{05}{2019} (pre-release).
-	\begin{lstlisting}
-include/iomanager.hpp    |   28 ++++
-include/nodes.hpp        |  122 ++++++---------
-include/sroutines.hpp    |   30 ++++
-include/stypes.hpp       |   22 ++-
-src/config_file.cpp      |    4 +-
-src/iomanager.cpp        |  134 ++++++++++++++++
-src/main.cpp             |    9 +-
-src/nodes.cpp            | 1118 ++++++++++++++++...
-src/sinput.cpp           |    2 +-
-src/sroutines.cpp        |  129 +++++++++++++++
-src/stypes.cpp           |   63 +++++++-
-22 files changed, 1942 insertions(+), 882 deletions(-)
-	\end{lstlisting}
-\end{frame}
-
 \begin{frame}
 \frametitle{Parallelization}
 The problem is parallelized with MPI.

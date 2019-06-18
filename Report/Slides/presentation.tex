@@ -9,7 +9,7 @@
 \usepackage{caption,graphicx,tikz}
 \usepackage[nodayofweek,level]{datetime}
 \usepackage{cleveref,hyperref}
-\usepackage{siunitx}
+\usepackage[binary-units=true]{siunitx}
 \usepackage[backend=bibtex,%
 style=alphabetic,%
 citestyle=authoryear]{biblatex}
@@ -52,12 +52,20 @@ BoldItalicFont={FiraSans-BoldItalic.ttf}]{FiraSans-Light.ttf}
 	parent=palette custom,
 	bg=mCustomBrown
 }
+\makeatletter
+\patchcmd{\beamer@sectionintoc}
+{\vfill}
+{\vskip\itemsep}
+{}
+{}
+\makeatother
+\setbeamertemplate{section in toc}{\inserttocsectionnumber.~\inserttocsection}
 % -- Listings configuration -- %
 \lstset{basicstyle=\small}
 % -- Custom commands -- %
 \newcommand{\mvec}[1]{\mathbf{#1}}
 \begin{document}
-	\author{Author: Louis Stenger\\Supervisor:~ Vincent Keller}
+	\author{Author:~Louis Stenger\\Supervisor:~Vincent Keller}
 	\title{2D N-Body Gravity Problem Solver}
 	%\subtitle{SuRMISe}
 	%\logo{}
@@ -72,7 +80,7 @@ BoldItalicFont={FiraSans-BoldItalic.ttf}]{FiraSans-Light.ttf}
 	
 	\begin{frame}
 		\frametitle{Table of Contents}
-		\tableofcontents
+		\tableofcontents[subsubsectionstyle=hide]
 	\end{frame}
 	% ------------------ %
 	\input{incl/introduction.tex}
