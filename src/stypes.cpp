@@ -41,6 +41,9 @@ void make_mpi_types() {
     disp[2] = offsetof( Particle, frc );
     disp[3] = offsetof( Particle, mass);
     disp[4] = offsetof( Particle, id  );
+    std::cout << "sizeof(Particle)=" << sizeof(Particle) << std::endl <<
+        "Displacements=(" << disp[0] << "," << disp[1] << "," << disp[2] << ","
+        << disp[3] << "," << disp[4] << ")" << std::endl << std::endl;
     MPI_Type_create_struct( 5, blocklen, disp, ptypes, &MPI_Particle_NR );
     // NOTE: Doubles and longs have different alignement (double have 8 bytes,
     // while long only four), such that the compiler might add a four byte
