@@ -121,30 +121,12 @@
 
 \begin{frame}
 	\frametitle{Data Structures (Cont.)}
-	Computation of the force should be the main task. Avoid memory latency issues if possible?
+	Computation of the force should be the main task. Can we store data locally, avoid memory latency issues if possible?
+	
+	\only<1>{Pointers}\only<2->{\alert{Pointers}} or arrays in the tree?
 	\begin{itemize}
-		\item<1-> SoA vs. \only<1>{AoS}\only<2->{\alert{AoS}}: SoA feasible on one CPU. However,
-		\begin{itemize}
-			\item Parallelized problem managing only some particles?
-			\item Particles being passed after time evolution?
-			\item Runaway particles?
-		\end{itemize}
-		\item<2-> \only<2>{Pointers}\only<3->{\alert{Pointers}} or array in the tree?
-		\begin{itemize}
-			\item Inhomogeneous particle distributions, most nodes empty.
-			\item Using arrays means allocating full levels, exponentially increasing memory usage.
-		\end{itemize}
-	\end{itemize}
-
-	\onslide<3->{However, the ``physical'' particles being simulated are kept local to another in a separate storage (in \lstinline|SConfig|).}
-\end{frame}
-
-\begin{frame}
-	\frametitle{Recursion}
-	All methods in the Barnes-Hut code avoid recursive calls.
-	\begin{itemize}
-		\item Much deeper levels possible for unbalanced problems. Stack could become large.
-		\item More conditional statements, but also removes class inheritance (and thus virtual calls, vtables).
+		\item Inhomogeneous particle distributions, most nodes empty.
+		\item Using arrays means allocating full levels, exponentially increasing memory usage.
 	\end{itemize}
 \end{frame}
 
@@ -154,14 +136,9 @@
 		\item Distribute \only<1>{only particles}\only<2>{\alert{only particles}}
 		\begin{itemize}
 			\item Minimal message size
-			\item Instances need to rebuild their tree (and possibly query missing parts)
 			\item Part of the work is duplicated on each process
 		\end{itemize}
-		\item Distribute the nodes
-		\begin{itemize}
-			\item Longer messages, especially for unbalanced problems
-			\item Either compute prerequisites of each process or allow communicating missing parts
-		\end{itemize}
+		\item Also distribute nodes: longer messages, especially for unbalanced problems
 	\end{itemize}
 \end{frame}
 
@@ -172,7 +149,7 @@ Particle sending/receiving:
 	\item Distribute all particles
 	\begin{itemize}
 		\item Minimal modifications to existing code
-		\item After initial broadcast, only need to send ``managed'' particles
+		\item Full communication only at initial broadcast
 	\end{itemize}
 	\item Distribute only managed particles
 	\begin{itemize}
@@ -181,23 +158,38 @@ Particle sending/receiving:
 	\end{itemize}
 \end{itemize}
 \par
-Particle ordering:~Already ordered along a ``multi-level'' Z-curve when we browse the leaf level. Distribute uniformly.
+Thread synchronization occurs when syncing leafs, between time evolution and IO.
 \par
-Thread synchronization occurs when syncing leafs (\lstinline|MPI_Barrier| and \lstinline|MPI_Send/Recv|). %TODO-Fill
+Particle ordering:~Already ordered along a ``multi-level'' Z-curve when we browse the leaf level. Distribute uniformly.
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Parallelization Strategy (Cont.)}
-Define a type for particles, \lstinline|MPI_Particle|.
+Define a type for particles, \lstinline|MPI_Particle|.\vspace*{10pt}
 	\begin{columns}
 		\begin{column}{0.4\textwidth}
 			\begin{figure}
 				\centering
 				\includegraphics[width=\textwidth]{inclfigs/particle.png}
 			\end{figure}
+			\lstinline|sizeof(double)=|\SI{8}{\byte}\\\lstinline|sizeof(long)=|\SI{8}{\byte}.
 		\end{column}
 		\begin{column}{0.6\textwidth}
-			\lstinline|sizeof(double)=|\SI{8}{\byte}, \lstinline|sizeof(long)=|\SI{4}{\byte}.
+\begin{lstlisting}[language=C++,basicstyle=\scriptsize]
+MPI_Datatype MPI_Particle_NR;
+MPI_Datatype ptypes[5]=
+    {MPI_DOUBLE,MPI_DOUBLE,MPI_DOUBLE,
+    MPI_DOUBLE,MPI_LONG};
+int blocklen[5]={2,2,2,1,1};
+MPI_Aint disp[5];
+disp[0] = offsetof( Particle, pos ); %0
+disp[1] = offsetof( Particle, vel ); %16
+disp[2] = offsetof( Particle, frc ); %32
+disp[3] = offsetof( Particle, mass); %48
+disp[4] = offsetof( Particle, id ); %56
+MPI_Type_create_struct( 5, blocklen, disp,
+    ptypes, &MPI_Particle_NR );
+\end{lstlisting}
 	\end{column}
 	\end{columns}
 \end{frame}

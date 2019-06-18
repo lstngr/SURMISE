@@ -28,9 +28,20 @@ src/stypes.cpp           |   63 +++++++-
 \end{lstlisting}
 \end{frame}
 
-\begin{frame}[t]
+
+\begin{frame}
 	\section{Recursive Methods in the FMM}
 	\frametitle{Recursive Methods in the FMM}
+	All methods in the Barnes-Hut code avoid recursive calls.
+	\begin{itemize}
+		\item Much deeper levels possible for unbalanced problems. Stack could become large.
+		\item More conditional statements, but also removes class inheritance (and thus virtual calls, vtables).
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[t]
+	\section{Recursive Methods in the FMM (Cont.)}
+	\frametitle{Recursive Methods in the FMM (Cont.)}
 	Up to v0.5 (FMM attempt), code was written with recursive instructions (and class inheritance). With \only<1>{\lstinline|O0|}\only<2>{\lstinline|O3|},
 	\begin{columns}
 		\begin{column}{0.7\textwidth}

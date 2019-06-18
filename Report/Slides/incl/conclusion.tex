@@ -4,7 +4,6 @@
 	\frametitle{Strengths and Caveats: Serial}
 	\begin{itemize}
 		%Pro
-		\item[$\bullet$] OOP style makes the code easy to understand
 		\item[$\bullet$] Recursive calls are avoided
 		\item[$\bullet$] No class inheritance
 		\item[$\bullet$] Tree update method to avoid full reconstruction
@@ -26,7 +25,7 @@
 		%Neg
 		\item[$\circ$] Large transfers for large system sizes ($\sim\SI{1}{\giga\byte}$ for $10^7$ particles!)
 		\item[$\circ$] No load balancing (incl. removed particles), high spin time
-		\item[$\circ$] Some methods (\lstinline|IsLeaf| ``fails'' in the parallel version)
+		\item[$\circ$] \lstinline|IsLeaf| method ``fails'' in the parallel version
 	\end{itemize}
 \end{frame}
 
